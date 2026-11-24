@@ -155,6 +155,61 @@ describe('LabPage — storage selection challenge', () => {
   });
 });
 
+describe('LabPage — CIDR and subnet lab', () => {
+  const path = '/cloud-fundamentals/networking/virtual-networks/labs/cidr-and-subnet-lab';
+
+  it('calculates the range for a typed block and passes validation', async () => {
+    const user = userEvent.setup();
+    renderLab(path);
+    const input = screen.getByLabelText('CIDR block');
+    await user.clear(input);
+    await user.type(input, '192.168.10.0/26');
+    await user.click(screen.getByLabelText('Jump to last state'));
+    expect(screen.getByText('192.168.10.63')).toBeInTheDocument();
+    expect(screen.getByText(/^59 /)).toBeInTheDocument();
+    expect(ruleMark('The CIDR block was parsed successfully')).toBe('✓');
+    expect(ruleMark('An overlap check was completed')).toBe('✓');
+  });
+
+  it('explains invalid input and fails validation', async () => {
+    const user = userEvent.setup();
+    renderLab(path);
+    const input = screen.getByLabelText('CIDR block');
+    await user.clear(input);
+    await user.type(input, '10.0.0.256/24');
+    await user.click(screen.getByLabelText('Jump to last state'));
+    expect(screen.getByRole('alert')).toHaveTextContent(/out of range/);
+    expect(ruleMark('The CIDR block was parsed successfully')).toBe('○');
+  });
+});
+
+describe('LabPage — packet routing lab', () => {
+  const path = '/cloud-fundamentals/networking/subnets-and-routing/labs/packet-routing-lab';
+
+  it('starts with a dropped packet and passes once the NAT route is added', async () => {
+    const user = userEvent.setup();
+    renderLab(path);
+    await user.click(screen.getByLabelText('Jump to last state'));
+    expect(screen.getByText(/dropped — no path/)).toBeInTheDocument();
+    expect(ruleMark('The app VM’s outbound packet was delivered')).toBe('○');
+
+    await user.selectOptions(screen.getByLabelText('Private subnet default route (0.0.0.0/0)'), 'nat');
+    await user.click(screen.getByLabelText('Jump to last state'));
+    expect(screen.getByText('Outcome: delivered')).toBeInTheDocument();
+    expect(ruleMark('The app VM’s outbound packet was delivered')).toBe('✓');
+    expect(ruleMark('Outbound access goes through the NAT gateway, not a public IP on the app VM')).toBe('✓');
+  });
+});
+
+describe('LabPage — DNS hands-on lab', () => {
+  it('presents local commands with the honesty note and no claim of verification', () => {
+    renderLab('/cloud-fundamentals/networking/dns-and-content-delivery/labs/trace-dns-resolution-locally');
+    expect(screen.getByText('hands-on lab')).toBeInTheDocument();
+    expect(screen.getByText('$ dig +trace www.example.com')).toBeInTheDocument();
+    expect(screen.getByText(/Self-reported — not automatically verified/)).toBeInTheDocument();
+  });
+});
+
 describe('LabPage — not found', () => {
   it('shows not found for an unknown lab id', () => {
     renderLab('/cloud-fundamentals/compute/virtual-machines/labs/nonexistent');
