@@ -104,6 +104,11 @@ export function ReactFlowScene({ scene, stateIndex, selectedNodeId, onSelectNode
         onNodeClick={handleNodeClick}
         onPaneClick={() => onSelectNode(null)}
         fitView
+        // The default minimum zoom (0.5) stops fitView from fitting wide
+        // diagrams on phone-width screens, so the initial view clipped nodes.
+        // The left padding keeps the zoom controls from covering a node.
+        minZoom={0.2}
+        fitViewOptions={{ padding: { top: '16px', right: '16px', bottom: '16px', left: '56px' } }}
         proOptions={{ hideAttribution: true }}
       >
         <Background />

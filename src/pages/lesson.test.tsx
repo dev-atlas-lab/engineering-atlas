@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router';
@@ -104,5 +104,15 @@ describe('LessonPage — interactive diagrams', () => {
       router.navigate('/cloud-fundamentals/global-infrastructure/geographic-redundancy-and-data-residency/multi-region-replication'),
     );
     expect(screen.getByText(/Step 1 of 3/)).toBeInTheDocument();
+  });
+});
+
+describe('LessonPage — React warnings', () => {
+  it('renders a lesson with both a visualization and a knowledge check without duplicate-key warnings', () => {
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    renderLesson('/cloud-fundamentals/networking/virtual-networks/virtual-network-architecture');
+    const keyWarnings = errors.mock.calls.filter((args) => String(args[0]).includes('same key'));
+    errors.mockRestore();
+    expect(keyWarnings).toEqual([]);
   });
 });
