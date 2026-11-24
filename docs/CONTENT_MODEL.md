@@ -231,3 +231,15 @@ All content is statically defined and bundled at build time. There is no content
 - Build-time validation of relationships (no broken links).
 - Tree-shaking of unused content.
 - Fast navigation without network requests.
+
+---
+
+## Implementation Rules (as of Slice 2A)
+
+These rules are enforced by `src/content/cloud-fundamentals/index.test.ts`:
+
+- **Status is the only availability field.** `ConceptMeta.status` drives every status label in the UI through `src/content/status.ts`. Unknown values are treated as `coming-soon`. See `docs/CLOUD_FUNDAMENTALS_CURRICULUM.md` for the labels and the rules for setting a status.
+- **Lesson and lab IDs are unique across the whole domain**, not just within their concept, because local progress is keyed by bare lesson and lab id.
+- **Every simulation lab is registered** in `src/content/cloud-fundamentals/lab-simulations.tsx` with a simulation whose id matches the lab's `simulationId`, and the registry contains no entries for labs that do not exist.
+- **Sequence visualizations have one state per message plus an initial state**, and every edge references existing nodes.
+- **Challenge solutions only reference decision and option IDs that exist.**

@@ -52,7 +52,9 @@ export default function LessonPage() {
           )}
         </header>
 
-        {lesson.visualization && <VisualizationRegion scene={lesson.visualization} />}
+        {/* Keyed so Previous/Next between two lessons with visualizations
+            resets the step and selection rather than reusing the old instance. */}
+        {lesson.visualization && <VisualizationRegion key={`visualization-${lesson.id}`} scene={lesson.visualization} />}
 
         <div className="space-y-6">
           {lesson.sections.map((section) => (
@@ -63,7 +65,7 @@ export default function LessonPage() {
         {lesson.providerDetails && <ProviderDetailsView details={lesson.providerDetails} />}
 
         {lesson.knowledgeCheck && lesson.knowledgeCheck.length > 0 && (
-          <KnowledgeCheck lessonId={lesson.id} questions={lesson.knowledgeCheck} />
+          <KnowledgeCheck key={`knowledge-check-${lesson.id}`} lessonId={lesson.id} questions={lesson.knowledgeCheck} />
         )}
 
         {lesson.furtherReading && lesson.furtherReading.length > 0 && (

@@ -8,7 +8,7 @@ export type SimulationParams = Record<string, SimulationParamValue>;
 export interface SimulationParameter {
   key: string;
   label: string;
-  type: 'number' | 'select' | 'boolean';
+  type: 'number' | 'select' | 'boolean' | 'text';
   default: SimulationParamValue;
   options?: { label: string; value: SimulationParamValue }[];
   min?: number;

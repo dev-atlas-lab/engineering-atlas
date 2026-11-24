@@ -1,6 +1,7 @@
 import { Link } from 'react-router';
 import { BookOpen } from 'lucide-react';
 import { domains } from '../content/cloud-fundamentals';
+import { countConceptsByStatus, formatStatusSummary } from '../content/status';
 
 export default function HomePage() {
   return (
@@ -39,16 +40,7 @@ export default function HomePage() {
                     {domain.categories.reduce((sum, c) => sum + c.concepts.length, 0)} concepts
                   </p>
                   <p className="mt-1 text-[13px] text-text-muted">
-                    {domain.categories.reduce(
-                      (sum, c) => sum + c.concepts.filter((concept) => concept.status === 'available').length,
-                      0,
-                    )}{' '}
-                    available &middot;{' '}
-                    {domain.categories.reduce(
-                      (sum, c) => sum + c.concepts.filter((concept) => concept.status !== 'available').length,
-                      0,
-                    )}{' '}
-                    coming soon
+                    {formatStatusSummary(countConceptsByStatus(domain.categories.flatMap((c) => c.concepts)))}
                   </p>
                 </div>
               </div>

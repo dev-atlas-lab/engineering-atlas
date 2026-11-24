@@ -23,10 +23,11 @@ describe('ConceptPage — unavailable concept (coming-soon)', () => {
     expect(screen.getByText(/IaaS, PaaS, and SaaS/)).toBeInTheDocument();
   });
 
-  it('shows Coming Soon status for coming-soon concepts', () => {
+  it('shows the Coming soon badge and explanation for coming-soon concepts', () => {
     renderConcept('/cloud-fundamentals/cloud-computing-models/cloud-service-models');
-    expect(screen.getByText('Coming Soon')).toBeInTheDocument();
+    expect(screen.getByText('Coming soon')).toHaveAttribute('data-status', 'coming-soon');
     expect(screen.getByText(/Learning content for this concept is planned/)).toBeInTheDocument();
+    expect(screen.queryByText('Active')).not.toBeInTheDocument();
   });
 
   it('shows not found for invalid concept', () => {
@@ -40,7 +41,12 @@ describe('ConceptPage — available concept with lessons', () => {
     renderConcept('/cloud-fundamentals/compute/virtual-machines');
     expect(screen.getAllByText('Virtual Machines').length).toBeGreaterThan(0);
     expect(screen.getByText('Learning Objectives')).toBeInTheDocument();
-    expect(screen.queryByText('Coming Soon')).not.toBeInTheDocument();
+    expect(screen.queryByText('Coming soon')).not.toBeInTheDocument();
+  });
+
+  it('shows the Active badge in the concept header', () => {
+    renderConcept('/cloud-fundamentals/compute/virtual-machines');
+    expect(screen.getByText('Active')).toHaveAttribute('data-status', 'available');
   });
 
   it('shows a Start link to the first lesson', () => {

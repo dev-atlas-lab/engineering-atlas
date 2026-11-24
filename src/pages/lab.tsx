@@ -3,7 +3,6 @@ import { Clock, FlaskConical } from 'lucide-react';
 import { findConcept, findLab } from '../content/cloud-fundamentals';
 import { labSimulations } from '../content/cloud-fundamentals/lab-simulations';
 import { LabPrerequisites } from '../engines/lab/lab-prerequisites';
-import { SimulationLabView } from '../engines/lab/simulation-lab-view';
 import { HandsOnLabView } from '../engines/lab/hands-on-lab-view';
 import { ChallengeLabView } from '../engines/lab/challenge-lab-view';
 import type { SimulationLab, HandsOnLab, ChallengeLab } from '../content/types';
@@ -35,7 +34,9 @@ export default function LabPage() {
         </span>
       </div>
 
-      <div className="mt-6 space-y-4">
+      {/* Keyed by lab so moving between labs resets simulation params and
+          challenge answers instead of carrying the previous lab's state over. */}
+      <div key={lab.id} className="mt-6 space-y-4">
         <LabPrerequisites prerequisites={lab.prerequisites} />
 
         {lab.type === 'simulation' &&
@@ -52,13 +53,7 @@ export default function LabPage() {
                 </div>
               );
             }
-            return (
-              <SimulationLabView
-                content={lab.content as SimulationLab}
-                simulation={binding.simulation}
-                renderState={binding.renderState}
-              />
-            );
+            return binding.render(lab.content as SimulationLab);
           })()}
 
         {lab.type === 'hands-on' && <HandsOnLabView lab={lab} content={lab.content as HandsOnLab} />}

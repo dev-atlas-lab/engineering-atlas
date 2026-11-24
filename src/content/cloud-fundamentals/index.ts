@@ -1,9 +1,9 @@
 import type { Domain, Category, ConceptMeta, Lesson, LabDefinition } from '../types';
 import { cloudComputingModels } from './categories/cloud-computing-models';
-import { globalInfrastructure } from './categories/global-infrastructure';
+import { globalInfrastructure } from './global-infrastructure';
 import { compute } from './compute';
-import { storage } from './categories/storage';
-import { networking } from './categories/networking';
+import { storage } from './storage';
+import { networking } from './networking';
 import { identityAndAccessManagement } from './categories/identity-and-access-management';
 import { security } from './categories/security';
 import { loadBalancing } from './categories/load-balancing';

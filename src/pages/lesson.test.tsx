@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi } from 'vitest';
+import { act, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import LessonPage from './lesson';
 
@@ -9,6 +10,7 @@ function renderLesson(path: string) {
     { initialEntries: [path] },
   );
   render(<RouterProvider router={router} />);
+  return router;
 }
 
 describe('LessonPage', () => {
@@ -63,5 +65,54 @@ describe('LessonPage', () => {
   it('shows not found for an unknown lesson id', () => {
     renderLesson('/cloud-fundamentals/compute/virtual-machines/nonexistent-lesson');
     expect(screen.getByText('Page Not Found')).toBeInTheDocument();
+  });
+});
+
+describe('LessonPage — interactive diagrams', () => {
+  const edgeLesson = '/cloud-fundamentals/global-infrastructure/data-centers-and-edge-locations/edge-locations-and-points-of-presence';
+
+  it('lets a keyboard user select a sequence-diagram actor and populate the inspector', async () => {
+    const user = userEvent.setup();
+    renderLesson(edgeLesson);
+    const actor = screen.getByRole('button', { name: 'Inspect Edge location' });
+    actor.focus();
+    await user.keyboard('{Enter}');
+    expect(actor).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText('Cached copies of responses')).toBeInTheDocument();
+  });
+
+  it('shows the explanation for the current step and updates it when stepping', async () => {
+    const user = userEvent.setup();
+    renderLesson(edgeLesson);
+    expect(screen.getByText('The edge location has no copy of /logo.png yet.')).toBeInTheDocument();
+    await user.click(screen.getByLabelText('Step forward'));
+    await user.click(screen.getByLabelText('Step forward'));
+    expect(screen.getByText(/forwards the request to the origin/)).toBeInTheDocument();
+  });
+
+  it('resets the timeline when navigating directly between two lessons that both have visualizations', async () => {
+    const user = userEvent.setup();
+    const router = renderLesson(
+      '/cloud-fundamentals/global-infrastructure/regions-and-availability-zones/regions-and-zones-explained',
+    );
+    await user.click(screen.getByLabelText('Jump to last state'));
+    expect(screen.getByText(/Step 4 of 4/)).toBeInTheDocument();
+
+    // Same route element, new params: LessonPage stays mounted. Without a
+    // key on the visualization, the old step index (3) would carry over.
+    await act(() =>
+      router.navigate('/cloud-fundamentals/global-infrastructure/geographic-redundancy-and-data-residency/multi-region-replication'),
+    );
+    expect(screen.getByText(/Step 1 of 3/)).toBeInTheDocument();
+  });
+});
+
+describe('LessonPage — React warnings', () => {
+  it('renders a lesson with both a visualization and a knowledge check without duplicate-key warnings', () => {
+    const errors = vi.spyOn(console, 'error').mockImplementation(() => {});
+    renderLesson('/cloud-fundamentals/networking/virtual-networks/virtual-network-architecture');
+    const keyWarnings = errors.mock.calls.filter((args) => String(args[0]).includes('same key'));
+    errors.mockRestore();
+    expect(keyWarnings).toEqual([]);
   });
 });

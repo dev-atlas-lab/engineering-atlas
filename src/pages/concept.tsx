@@ -1,24 +1,30 @@
 import { Link, useParams } from 'react-router';
 import { Clock, Wrench } from 'lucide-react';
 import { findConcept, type ConceptStatus } from '../content/cloud-fundamentals';
+import { normalizeConceptStatus } from '../content/status';
+import { ConceptStatusBadge } from '../components/concept-status-badge';
 import { LessonNav } from '../app/layout/lesson-nav';
 import { NotFound } from './not-found';
 
-const statusConfig: Record<
-  Exclude<ConceptStatus, 'available'>,
-  { icon: typeof Clock; label: string; description: string }
-> = {
+const unavailableDetail: Record<Exclude<ConceptStatus, 'available'>, { icon: typeof Clock; description: string }> = {
   'coming-soon': {
     icon: Clock,
-    label: 'Coming Soon',
     description: 'Learning content for this concept is planned but not yet started.',
   },
   'in-development': {
     icon: Wrench,
-    label: 'In Development',
-    description: 'Learning content for this concept is currently being built.',
+    description: 'Learning content for this concept is being built and is not ready to use yet.',
   },
 };
+
+function ConceptHeader({ title, status }: { title: string; status: ConceptStatus }) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+      <h1 className="text-2xl font-semibold text-text">{title}</h1>
+      <ConceptStatusBadge status={status} />
+    </div>
+  );
+}
 
 export default function ConceptPage() {
   const { domainId, categoryId, conceptId } = useParams();
@@ -27,25 +33,25 @@ export default function ConceptPage() {
 
   if (!concept || !domainId || !categoryId) return <NotFound />;
 
-  const hasLessons = concept.status === 'available' && (concept.lessons?.length ?? 0) > 0;
+  const status = normalizeConceptStatus(concept.status);
+  const hasLessons = status === 'available' && (concept.lessons?.length ?? 0) > 0;
 
   if (!hasLessons) {
-    // Honest empty state — every concept starts here, and most still are here.
-    // See docs/M1B_LEARNING_WORKSPACE_SPEC.md §8.
-    const config = statusConfig[concept.status as Exclude<ConceptStatus, 'available'>] ?? statusConfig['coming-soon'];
-    const Icon = config.icon;
+    // Honest empty state — see docs/M1B_LEARNING_WORKSPACE_SPEC.md §8. An
+    // 'available' concept with no lessons is a content error; it is shown
+    // as Coming soon rather than as an empty Active workspace.
+    const shownStatus: Exclude<ConceptStatus, 'available'> = status === 'in-development' ? 'in-development' : 'coming-soon';
+    const detail = unavailableDetail[shownStatus];
+    const Icon = detail.icon;
 
     return (
       <div className="max-w-2xl">
-        <h1 className="text-2xl font-semibold text-text">{concept.title}</h1>
+        <ConceptHeader title={concept.title} status={shownStatus} />
         <p className="mt-2 text-[15px] leading-relaxed text-text-secondary">{concept.description}</p>
 
         <div className="mt-8 flex items-start gap-3 rounded-lg border border-border bg-bg-subtle p-5">
           <Icon className="mt-0.5 size-5 shrink-0 text-text-muted" />
-          <div>
-            <p className="text-[14px] font-medium text-text">{config.label}</p>
-            <p className="mt-1 text-[13px] leading-relaxed text-text-secondary">{config.description}</p>
-          </div>
+          <p className="text-[13px] leading-relaxed text-text-secondary">{detail.description}</p>
         </div>
       </div>
     );
@@ -57,8 +63,8 @@ export default function ConceptPage() {
     <div className="flex flex-col gap-6 lg:flex-row">
       <LessonNav domainId={domainId} categoryId={categoryId} concept={concept} />
 
-      <div className="max-w-2xl flex-1">
-        <h1 className="text-2xl font-semibold text-text">{concept.title}</h1>
+      <div className="min-w-0 max-w-2xl flex-1">
+        <ConceptHeader title={concept.title} status={status} />
         <p className="mt-2 text-[15px] leading-relaxed text-text-secondary">{concept.description}</p>
 
         {concept.learningObjectives && concept.learningObjectives.length > 0 && (

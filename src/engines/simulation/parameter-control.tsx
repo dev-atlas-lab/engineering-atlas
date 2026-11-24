@@ -25,6 +25,18 @@ export function ParameterControl({ param, value, onChange }: ParameterControlPro
         />
       )}
 
+      {param.type === 'text' && (
+        <input
+          id={param.key}
+          type="text"
+          value={String(value)}
+          spellCheck={false}
+          autoComplete="off"
+          onChange={(e) => onChange(e.target.value)}
+          className="mt-1 w-full rounded-md border border-border bg-surface px-2 py-1 font-mono text-[13px] text-text"
+        />
+      )}
+
       {param.type === 'boolean' && (
         <input
           id={param.key}

@@ -8,6 +8,16 @@ A later brief ("Cloud Fundamentals master implementation") asked for the entire 
 
 The exit criteria for M2/M3/M4 below should now be read as the cumulative exit criteria for this combined initiative, reached incrementally slice by slice rather than milestone by milestone.
 
+**Slice progress:**
+
+| Slice | Categories | Status |
+|---|---|---|
+| 1 | Platform foundation, Compute | Merged |
+| 2A | Global Infrastructure, Storage, Networking; concept status labels | In review |
+| 2B and later | Remaining six categories | Not started |
+
+Concept-level coverage is tracked in `docs/CLOUD_FUNDAMENTALS_CURRICULUM.md`.
+
 ## Milestone Overview
 
 | Milestone | Focus | Status |

@@ -5,15 +5,16 @@ import type { SceneDefinition } from './types';
 interface SceneRendererProps {
   scene: SceneDefinition;
   stateIndex: number;
+  selectedNodeId: string | null;
   onSelectNode: (nodeId: string | null) => void;
 }
 
 /** Picks the rendering strategy from `scene.type` — see docs/VISUALIZATION_ENGINE.md. */
-export function SceneRenderer({ scene, stateIndex, onSelectNode }: SceneRendererProps) {
-  switch (scene.type) {
+export function SceneRenderer(props: SceneRendererProps) {
+  switch (props.scene.type) {
     case 'topology':
-      return <ReactFlowScene scene={scene} stateIndex={stateIndex} onSelectNode={onSelectNode} />;
+      return <ReactFlowScene {...props} />;
     case 'sequence':
-      return <SequenceScene scene={scene} stateIndex={stateIndex} onSelectNode={onSelectNode} />;
+      return <SequenceScene {...props} />;
   }
 }
