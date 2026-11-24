@@ -6,6 +6,8 @@ import { vmResourceAllocationSimulation } from './compute/simulations';
 import { renderVmAllocationState } from './compute/vm-allocation-view';
 import { zoneFailureSimulation } from './global-infrastructure/simulations';
 import { renderZoneFailureState } from './global-infrastructure/zone-failure-view';
+import { replicationSimulation } from './storage/simulations';
+import { renderReplicationState } from './storage/replication-view';
 
 // Maps a simulation lab's id to the live SimulationDefinition it runs and
 // the lab-specific view of that simulation's state. Each entry is bound
@@ -30,4 +32,5 @@ function bind<TState>(
 export const labSimulations: Record<string, LabSimulationEntry> = {
   'vm-resource-allocation-lab': bind(vmResourceAllocationSimulation, renderVmAllocationState),
   'zone-failure-simulation-lab': bind(zoneFailureSimulation, renderZoneFailureState),
+  'replication-and-durability-lab': bind(replicationSimulation, renderReplicationState),
 };

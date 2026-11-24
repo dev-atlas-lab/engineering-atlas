@@ -103,6 +103,58 @@ describe('LabPage — architecture challenge', () => {
   });
 });
 
+describe('LabPage — replication and durability simulation', () => {
+  const path = '/cloud-fundamentals/storage/object-storage/labs/replication-and-durability-lab';
+
+  it('reports local redundancy as unreadable through a zone failure and fails validation', async () => {
+    const user = userEvent.setup();
+    renderLab(path);
+    await user.selectOptions(screen.getByLabelText('Failure to simulate'), 'zone');
+    await user.click(screen.getByLabelText('Jump to last state'));
+    expect(screen.getByText(/Only if the outage is temporary/)).toBeInTheDocument();
+    expect(ruleMark('Data stays readable with no failover')).toBe('○');
+  });
+
+  it('passes validation with zone-redundant storage under a zone failure', async () => {
+    const user = userEvent.setup();
+    renderLab(path);
+    await user.selectOptions(screen.getByLabelText('Redundancy strategy'), 'zone');
+    await user.selectOptions(screen.getByLabelText('Failure to simulate'), 'zone');
+    await user.click(screen.getByLabelText('Jump to last state'));
+    expect(ruleMark('Tested against a zone failure')).toBe('✓');
+    expect(ruleMark('Data stays readable with no failover')).toBe('✓');
+    expect(ruleMark('No second region paid for when the requirement does not need one')).toBe('✓');
+  });
+
+  it('marks geo-zone storage as over-provisioned for this requirement', async () => {
+    const user = userEvent.setup();
+    renderLab(path);
+    await user.selectOptions(screen.getByLabelText('Redundancy strategy'), 'geo-zone');
+    await user.selectOptions(screen.getByLabelText('Failure to simulate'), 'zone');
+    await user.click(screen.getByLabelText('Jump to last state'));
+    expect(ruleMark('Data stays readable with no failover')).toBe('✓');
+    expect(ruleMark('No second region paid for when the requirement does not need one')).toBe('○');
+  });
+});
+
+describe('LabPage — storage selection challenge', () => {
+  it('assesses the optimal storage design', async () => {
+    const user = userEvent.setup();
+    renderLab('/cloud-fundamentals/storage/file-storage/labs/storage-selection-challenge');
+    const fieldsets = screen.getAllByRole('group');
+    const pick = async (index: number, label: RegExp) => {
+      const option = Array.from(fieldsets[index]!.querySelectorAll('label')).find((l) => label.test(l.textContent ?? ''));
+      await user.click(option!);
+    };
+    await pick(0, /^Block volume/);
+    await pick(1, /^File share/);
+    await pick(2, /^Object storage/);
+    await pick(3, /^Object storage, archive tier/);
+    await user.click(screen.getByText('Evaluate My Design'));
+    expect(screen.getByText('optimal')).toBeInTheDocument();
+  });
+});
+
 describe('LabPage — not found', () => {
   it('shows not found for an unknown lab id', () => {
     renderLab('/cloud-fundamentals/compute/virtual-machines/labs/nonexistent');

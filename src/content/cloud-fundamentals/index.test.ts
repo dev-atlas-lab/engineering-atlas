@@ -16,7 +16,7 @@ const validStatuses = ['available', 'in-development', 'coming-soon'];
 
 // Categories whose concepts are fully authored. Every concept in these is
 // expected to be Active; every concept elsewhere is expected to be Coming soon.
-const ACTIVE_CATEGORIES = ['compute', 'global-infrastructure'];
+const ACTIVE_CATEGORIES = ['compute', 'global-infrastructure', 'storage'];
 
 describe('Cloud Fundamentals content index — structure', () => {
   it('has exactly 10 categories', () => {

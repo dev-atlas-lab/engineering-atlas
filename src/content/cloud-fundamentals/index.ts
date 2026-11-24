@@ -2,7 +2,7 @@ import type { Domain, Category, ConceptMeta, Lesson, LabDefinition } from '../ty
 import { cloudComputingModels } from './categories/cloud-computing-models';
 import { globalInfrastructure } from './global-infrastructure';
 import { compute } from './compute';
-import { storage } from './categories/storage';
+import { storage } from './storage';
 import { networking } from './categories/networking';
 import { identityAndAccessManagement } from './categories/identity-and-access-management';
 import { security } from './categories/security';
