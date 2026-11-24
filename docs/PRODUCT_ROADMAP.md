@@ -1,5 +1,13 @@
 # Product Roadmap — Engineering Atlas
 
+## Note on M2–M4 Scope (added during M2)
+
+A later brief ("Cloud Fundamentals master implementation") asked for the entire Cloud Fundamentals domain — all 10 categories, visualizations, simulations, Azure/AWS mappings, labs, knowledge checks, and local progress tracking — built end-to-end, rather than phased across M2 (domain content), M3 (labs/simulations), and M4 (progress tracking) as originally planned below. Per CLAUDE.md's instruction not to silently override an approved decision, this is recorded explicitly rather than just proceeding:
+
+**Resolution:** For Cloud Fundamentals specifically, M2/M3/M4's content is delivered together under one initiative, sequenced internally as documented slices (see `docs/decisions/ADR-006-reduced-state-management-footprint.md` and the M2 implementation plan) rather than as three separate milestones with separate sign-off gates. Each slice (platform foundation + Compute category first, then the remaining categories in batches) still gets its own verification pass and milestone report — the compression is about not re-litigating architecture three times, not about skipping the discipline those gates existed for. **M5+ (future domains beyond Cloud Fundamentals) is unaffected and still follows the original phased model below.**
+
+The exit criteria for M2/M3/M4 below should now be read as the cumulative exit criteria for this combined initiative, reached incrementally slice by slice rather than milestone by milestone.
+
 ## Milestone Overview
 
 | Milestone | Focus | Status |
