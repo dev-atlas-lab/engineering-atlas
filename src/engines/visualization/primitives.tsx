@@ -1,0 +1,36 @@
+import {
+  Server,
+  Database,
+  Waypoints,
+  Monitor,
+  Network,
+  Layers3,
+  Zap,
+  HardDrive,
+  ShieldCheck,
+  MapPin,
+  Boxes,
+  type LucideIcon,
+} from 'lucide-react';
+import type { ScenePrimitive } from './types';
+
+export const primitiveIcons: Record<ScenePrimitive, LucideIcon> = {
+  server: Server,
+  database: Database,
+  loadbalancer: Waypoints,
+  client: Monitor,
+  network: Network,
+  queue: Boxes,
+  function: Zap,
+  storage: HardDrive,
+  gateway: ShieldCheck,
+  region: MapPin,
+  availabilityZone: Layers3,
+  host: Server,
+};
+
+export const statusDotClass: Record<'active' | 'inactive' | 'error', string> = {
+  active: 'bg-success',
+  inactive: 'bg-text-muted',
+  error: 'bg-error',
+};
