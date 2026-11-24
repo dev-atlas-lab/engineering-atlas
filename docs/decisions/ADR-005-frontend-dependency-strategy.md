@@ -34,21 +34,27 @@ Install dependencies incrementally. Each dependency is added in the milestone ph
 
 **Radix UI primitives** are installed per-component as shadcn/ui requires them (e.g., `@radix-ui/react-scroll-area` when we copy the ScrollArea component). They are not installed upfront.
 
-### M1B Dependencies — First Learning Experience
+### M2 Dependencies — Installed
 
-| Dependency | Purpose | Why Then |
+The M1B plan below listed these as "M1B dependencies" before M1B was re-scoped to documentation-only (see `docs/M1B_*` design docs). They were actually installed during M2 (Cloud Fundamentals platform foundation + Compute category), alongside one dependency originally deferred further:
+
+| Dependency | Purpose | Installed version |
 |---|---|---|
-| `zustand` | State management | Visualization and simulation state require cross-component coordination |
-| `@xyflow/react` | Node-based graph visualization (React Flow v12) | First topology visualization |
-| `motion` | Animation | State transitions in visualizations |
+| `zustand` | State management | ^5.1.0 — see ADR-006 for why M2 introduces only one store (`progressStore`), not the six-store blueprint in `ARCHITECTURE.md` |
+| `@xyflow/react` | Node-based graph visualization | ^13.0.3 — the package was renamed from `reactflow` to `@xyflow/react` at v11; "React Flow v12" in the original plan referred to the renamed package's then-current major, M2 installed the current major (v13) at install time |
+| `idb-keyval` | IndexedDB convenience wrapper for `progressStore` | ^6.3.0 — **pulled forward from "Future Dependencies" below.** Originally gated on "only when persistence is implemented (M4)"; M2's scope (per the Cloud Fundamentals master implementation brief) makes lesson/lab progress tracking real now, satisfying this ADR's own adoption criterion ("is it needed now") ahead of schedule. This is a deliberate, documented pull-forward, not a silent scope change. |
 
-### Future Dependencies (Not Before M2+)
+**Sequence (SVG) scenes use no additional dependency.** The original plan assumed `d3` would be needed for non-topology scenes; M2's `SequenceScene` (used by the Serverless Functions concept) is hand-built inline SVG with no `d3` dependency, since the sequence-diagram layout needed is simple enough not to justify it. `d3` remains deferred below.
+
+**`motion` was installed, then removed before this slice shipped.** It was pre-approved for M1B in the original table below and installed alongside the other three M2 dependencies — but a review before committing found it was never actually imported anywhere: every M2 animation (timeline step transitions, inspector reveal) turned out to need nothing beyond CSS transitions already available through Tailwind. Per this ADR's own standard ("is it needed now, not will it be useful"), an installed-but-unused dependency is exactly what M2 should not ship, so it was uninstalled rather than left in `package.json` against future need. It moves back to "Future Dependencies" below — a one-line reinstall whenever a concept's visualization actually needs JS-driven animation (e.g., spring physics, gesture-driven transitions) that CSS transitions can't express.
+
+### Future Dependencies (Not Before M3+)
 
 | Dependency | Purpose | Why Later |
 |---|---|---|
-| `d3` | Custom SVG visualizations | Only when we build non-topology scenes (sequence, structure) |
-| `idb-keyval` | IndexedDB convenience wrapper | Only when persistence is implemented (M4) |
-| MDX tooling (`@mdx-js/rollup`, etc.) | Content authoring in MDX | Only when content authoring workflow is established (M2) |
+| `d3` | Custom SVG visualizations needing real layout/scale computation | Only if a future concept's visualization genuinely needs it — M2's sequence scenes did not |
+| `motion` | Animation beyond what CSS transitions can express | Re-evaluate when a concept's visualization has a concrete need for it — M2 had none |
+| MDX tooling (`@mdx-js/rollup`, etc.) | Content authoring in MDX | Not planned — M2 decided structured TypeScript/TSX for lesson content instead (no new build-pipeline dependency); revisit only if TSX authoring proves insufficient for later categories |
 
 ## Consequences
 
@@ -74,15 +80,15 @@ Before adding any dependency:
 
 ## Decisions on Specific Libraries
 
-### Zustand: Deferred to M1B
+### Zustand: Deferred past M1A, introduced in M2 with reduced scope
 
-ARCHITECTURE.md defines six Zustand stores. This is premature for M1A, which has three pieces of state:
+ARCHITECTURE.md defines six Zustand stores. This was premature for M1A, which has three pieces of state:
 
 - Sidebar open/closed (component-local `useState`).
 - Current route (React Router handles this).
 - Theme preference (CSS custom property + `localStorage` via a small context).
 
-Zustand is warranted in M1B when visualization state, simulation state, and cross-component coordination appear.
+**Update at M2:** Zustand was introduced, but for only one of the six originally-planned stores (`progressStore`). The other five were audited against the same "is there a concrete need now" bar this ADR uses for every dependency, and each turned out to have a real but *local* need better served without global state (route params, component-local state lifted one level, or a typed URL search-param wrapper). See ADR-006 for the full reasoning — this is a deliberate reduction of `ARCHITECTURE.md`'s original blueprint, not an oversight.
 
 ### Tailwind CSS v4 with Vite Plugin
 

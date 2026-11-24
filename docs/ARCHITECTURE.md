@@ -181,6 +181,8 @@ All data is stored locally in the browser.
 
 ## State Management
 
+> **Superseded for M2 onward** by `docs/decisions/ADR-006-reduced-state-management-footprint.md`. The six-store design below was the M0 intent; M2 implemented only `progressStore`, with the other five deferred until a real cross-cutting need for each appears. The table is kept here as the original design record.
+
 **Zustand** for application state, organized by concern:
 
 | Store | Responsibility |

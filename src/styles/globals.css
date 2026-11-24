@@ -27,6 +27,7 @@
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
 
   --width-sidebar: 280px;
+  --width-sidebar-rail: 64px;
   --width-sidebar-collapsed: 0px;
   --height-header: 56px;
 

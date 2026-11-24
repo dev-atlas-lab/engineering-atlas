@@ -1,0 +1,57 @@
+import { X } from 'lucide-react';
+import { primitiveIcons, statusDotClass } from './primitives';
+import type { SceneNode } from './types';
+
+interface ComponentInspectorProps {
+  node: SceneNode | null;
+  onClose: () => void;
+}
+
+export function ComponentInspector({ node, onClose }: ComponentInspectorProps) {
+  if (!node) {
+    return (
+      <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-border p-6 text-center text-[13px] text-text-muted">
+        Click a component in the diagram to inspect it.
+      </div>
+    );
+  }
+
+  const Icon = primitiveIcons[node.type];
+  const fields = Object.entries(node.data);
+
+  return (
+    <div className="rounded-lg border border-border bg-surface p-4">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <Icon className="size-4 text-text-muted" />
+          <h3 className="text-[14px] font-medium text-text">{node.label}</h3>
+        </div>
+        <button
+          onClick={onClose}
+          aria-label="Close inspector"
+          className="flex size-6 shrink-0 items-center justify-center rounded-md text-text-secondary hover:bg-bg-subtle"
+        >
+          <X className="size-3.5" />
+        </button>
+      </div>
+
+      {node.status && (
+        <div className="mt-2 flex items-center gap-1.5 text-[12px] text-text-secondary">
+          <span className={`size-1.5 rounded-full ${statusDotClass[node.status]}`} />
+          <span className="capitalize">{node.status}</span>
+        </div>
+      )}
+
+      {fields.length > 0 && (
+        <dl className="mt-3 space-y-1.5 border-t border-border-subtle pt-3">
+          {fields.map(([key, value]) => (
+            <div key={key} className="flex items-baseline justify-between gap-3 text-[12px]">
+              <dt className="text-text-muted">{key}</dt>
+              <dd className="text-right font-medium text-text">{String(value)}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+    </div>
+  );
+}
