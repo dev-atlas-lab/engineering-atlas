@@ -9,6 +9,8 @@ export function resolveBreadcrumbs(params: {
   domainId?: string;
   categoryId?: string;
   conceptId?: string;
+  lessonId?: string;
+  labId?: string;
 }): BreadcrumbItem[] {
   const crumbs: BreadcrumbItem[] = [];
 
@@ -31,17 +33,23 @@ export function resolveBreadcrumbs(params: {
 
   if (!params.conceptId) return crumbs;
 
-  const concept = findConcept(
-    params.domainId,
-    params.categoryId,
-    params.conceptId,
-  );
+  const concept = findConcept(params.domainId, params.categoryId, params.conceptId);
   if (!concept) return crumbs;
 
-  crumbs.push({
-    label: concept.title,
-    path: `/${domain.id}/${category.id}/${concept.id}`,
-  });
+  const conceptPath = `/${domain.id}/${category.id}/${concept.id}`;
+  crumbs.push({ label: concept.title, path: conceptPath });
+
+  if (params.lessonId) {
+    const lesson = concept.lessons?.find((l) => l.id === params.lessonId);
+    if (lesson) crumbs.push({ label: lesson.title, path: `${conceptPath}/${lesson.id}` });
+    return crumbs;
+  }
+
+  if (params.labId) {
+    const lab = concept.labs?.find((l) => l.id === params.labId);
+    if (lab) crumbs.push({ label: lab.title, path: `${conceptPath}/labs/${lab.id}` });
+    return crumbs;
+  }
 
   return crumbs;
 }

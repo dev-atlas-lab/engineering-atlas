@@ -36,11 +36,19 @@ export default function HomePage() {
                   </p>
                   <p className="mt-2 text-[13px] text-text-muted">
                     {domain.categories.length} categories &middot;{' '}
+                    {domain.categories.reduce((sum, c) => sum + c.concepts.length, 0)} concepts
+                  </p>
+                  <p className="mt-1 text-[13px] text-text-muted">
                     {domain.categories.reduce(
-                      (sum, c) => sum + c.concepts.length,
+                      (sum, c) => sum + c.concepts.filter((concept) => concept.status === 'available').length,
                       0,
                     )}{' '}
-                    concepts
+                    available &middot;{' '}
+                    {domain.categories.reduce(
+                      (sum, c) => sum + c.concepts.filter((concept) => concept.status !== 'available').length,
+                      0,
+                    )}{' '}
+                    coming soon
                   </p>
                 </div>
               </div>

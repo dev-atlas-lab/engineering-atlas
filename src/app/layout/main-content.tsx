@@ -8,6 +8,8 @@ export function MainContent() {
     domainId: params.domainId,
     categoryId: params.categoryId,
     conceptId: params.conceptId,
+    lessonId: params.lessonId,
+    labId: params.labId,
   });
 
   return (
