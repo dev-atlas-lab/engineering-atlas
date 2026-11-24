@@ -4,6 +4,7 @@ import { resolveSceneAtState, type SceneDefinition } from './types';
 interface SequenceSceneProps {
   scene: SceneDefinition;
   stateIndex: number;
+  selectedNodeId: string | null;
   onSelectNode: (nodeId: string | null) => void;
 }
 
@@ -11,7 +12,7 @@ const ACTOR_GAP = 180;
 const ROW_HEIGHT = 48;
 const TOP_PADDING = 48;
 
-export function SequenceScene({ scene, stateIndex, onSelectNode }: SequenceSceneProps) {
+export function SequenceScene({ scene, stateIndex, selectedNodeId, onSelectNode }: SequenceSceneProps) {
   const { nodes: actors, edges } = resolveSceneAtState(scene, stateIndex);
   const width = Math.max(actors.length * ACTOR_GAP, 320);
   const height = TOP_PADDING + edges.length * ROW_HEIGHT + 32;
@@ -39,9 +40,10 @@ export function SequenceScene({ scene, stateIndex, onSelectNode }: SequenceScene
               role="button"
               tabIndex={0}
               aria-label={`Inspect ${actor.label}`}
+              aria-pressed={actor.id === selectedNodeId}
               onClick={() => onSelectNode(actor.id)}
               onKeyDown={(e) => handleKeyDown(e, actor.id)}
-              className="cursor-pointer outline-none focus-visible:opacity-80"
+              className="group/actor cursor-pointer outline-none"
             >
               <line
                 x1={x}
@@ -57,7 +59,10 @@ export function SequenceScene({ scene, stateIndex, onSelectNode }: SequenceScene
                 width={112}
                 height={28}
                 rx={6}
-                className="fill-surface stroke-border"
+                strokeWidth={actor.id === selectedNodeId ? 2 : 1}
+                className={`fill-surface group-focus-visible/actor:stroke-accent ${
+                  actor.id === selectedNodeId ? 'stroke-accent' : 'stroke-border'
+                }`}
               />
               <text x={x} y={22} textAnchor="middle" className="fill-text text-[12px] font-medium">
                 {actor.label}

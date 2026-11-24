@@ -1,6 +1,6 @@
 import type { Domain, Category, ConceptMeta, Lesson, LabDefinition } from '../types';
 import { cloudComputingModels } from './categories/cloud-computing-models';
-import { globalInfrastructure } from './categories/global-infrastructure';
+import { globalInfrastructure } from './global-infrastructure';
 import { compute } from './compute';
 import { storage } from './categories/storage';
 import { networking } from './categories/networking';

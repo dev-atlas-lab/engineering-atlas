@@ -10,7 +10,9 @@ interface VisualizationRegionProps {
 
 /**
  * The workspace's Visualization Region (docs/M1B_LEARNING_WORKSPACE_SPEC.md §4):
- * scene + timeline (when the scene has more than one state) + inspector.
+ * scene + timeline and step explanation (when the scene has more than one
+ * state) + inspector. Callers key this by scene so switching scenes resets
+ * the step index and selection.
  */
 export function VisualizationRegion({ scene }: VisualizationRegionProps) {
   const [stateIndex, setStateIndex] = useState(0);
@@ -21,15 +23,25 @@ export function VisualizationRegion({ scene }: VisualizationRegionProps) {
 
   return (
     <div className="space-y-3">
-      <SceneRenderer scene={scene} stateIndex={stateIndex} onSelectNode={setSelectedNodeId} />
+      <SceneRenderer
+        scene={scene}
+        stateIndex={stateIndex}
+        selectedNodeId={selectedNodeId}
+        onSelectNode={setSelectedNodeId}
+      />
 
       {scene.states.length > 1 && (
-        <TimelineController
-          stepIndex={stateIndex}
-          totalSteps={scene.states.length}
-          stepLabel={state.label}
-          onStepTo={setStateIndex}
-        />
+        <>
+          <TimelineController
+            stepIndex={stateIndex}
+            totalSteps={scene.states.length}
+            stepLabel={state.label}
+            onStepTo={setStateIndex}
+          />
+          <p aria-live="polite" className="text-[13px] leading-relaxed text-text-secondary">
+            {state.description}
+          </p>
+        </>
       )}
 
       <ComponentInspector node={selectedNode} onClose={() => setSelectedNodeId(null)} />
