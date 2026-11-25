@@ -82,83 +82,90 @@ interface ProgressState extends PersistedProgress {
   setLabTaskCompleted: (labId: string, taskId: string, completed: boolean) => void;
 }
 
-export const useProgressStore = create<ProgressState>((set, get) => ({
-  loaded: false,
-  ...emptyPersisted(),
+export const useProgressStore = create<ProgressState>((set, get) => {
+  // Writes made before the stored snapshot has been loaded must not be
+  // persisted yet: they hold only this session's progress, and saving them
+  // would overwrite everything stored earlier. They are recorded in memory,
+  // merged with the snapshot by load(), and the merged state is saved then.
+  let writesBeforeLoad = false;
 
-  load: async () => {
-    let stored: PersistedProgress | undefined;
-    try {
-      stored = await idbGet<PersistedProgress>(STORAGE_KEY);
-    } catch {
-      stored = undefined;
-    }
-    if (!stored) {
-      set({ loaded: true });
+  function persistCurrent() {
+    const state = get();
+    if (!state.loaded) {
+      writesBeforeLoad = true;
       return;
     }
-    // Merge, don't replace: a lesson/lab view can call markLessonComplete
-    // (or another write) in its own mount effect before this async read
-    // resolves. Replacing state outright here would silently discard that
-    // write. In-memory state — whatever has been recorded since mount —
-    // always wins over the possibly-older persisted snapshot.
-    set((state) => ({
-      completedLessons: { ...stored.completedLessons, ...state.completedLessons },
-      knowledgeCheckResults: mergeNested(stored.knowledgeCheckResults, state.knowledgeCheckResults),
-      labs: mergeLabs(stored.labs, state.labs),
-      loaded: true,
-    }));
-  },
-
-  markLessonComplete: (lessonId) => {
-    const completedLessons = { ...get().completedLessons, [lessonId]: true as const };
-    set({ completedLessons });
     void persist({
-      completedLessons,
-      knowledgeCheckResults: get().knowledgeCheckResults,
-      labs: get().labs,
+      completedLessons: state.completedLessons,
+      knowledgeCheckResults: state.knowledgeCheckResults,
+      labs: state.labs,
     });
-  },
+  }
 
-  recordKnowledgeCheckAnswer: (lessonId, questionId, correct) => {
-    const forLesson = { ...(get().knowledgeCheckResults[lessonId] ?? {}), [questionId]: correct };
-    const knowledgeCheckResults = { ...get().knowledgeCheckResults, [lessonId]: forLesson };
-    set({ knowledgeCheckResults });
-    void persist({
-      completedLessons: get().completedLessons,
-      knowledgeCheckResults,
-      labs: get().labs,
-    });
-  },
+  return {
+    loaded: false,
+    ...emptyPersisted(),
 
-  setLabChecklistItem: (labId, taskId, item, checked) => {
-    const lab = get().labs[labId] ?? { labId, status: 'in-progress' as const, taskProgress: {} };
-    const task = lab.taskProgress[taskId] ?? { taskId, completed: false, checklist: {} };
-    const checklist = { ...task.checklist, [item]: checked };
-    const taskProgress = { ...lab.taskProgress, [taskId]: { ...task, checklist } };
-    const labs = { ...get().labs, [labId]: { ...lab, taskProgress } };
-    set({ labs });
-    void persist({
-      completedLessons: get().completedLessons,
-      knowledgeCheckResults: get().knowledgeCheckResults,
-      labs,
-    });
-  },
+    load: async () => {
+      let stored: PersistedProgress | undefined;
+      try {
+        stored = await idbGet<PersistedProgress>(STORAGE_KEY);
+      } catch {
+        stored = undefined;
+      }
+      // Merge, don't replace: a lesson/lab view can call markLessonComplete
+      // (or another write) in its own mount effect before this async read
+      // resolves. Replacing state outright here would silently discard that
+      // write. In-memory state — whatever has been recorded since mount —
+      // always wins over the possibly-older persisted snapshot.
+      set((state) =>
+        stored
+          ? {
+              completedLessons: { ...stored.completedLessons, ...state.completedLessons },
+              knowledgeCheckResults: mergeNested(stored.knowledgeCheckResults, state.knowledgeCheckResults),
+              labs: mergeLabs(stored.labs, state.labs),
+              loaded: true,
+            }
+          : { loaded: true },
+      );
+      if (writesBeforeLoad) {
+        writesBeforeLoad = false;
+        persistCurrent();
+      }
+    },
 
-  setLabTaskCompleted: (labId, taskId, completed) => {
-    const lab = get().labs[labId] ?? { labId, status: 'in-progress' as const, taskProgress: {} };
-    const task = lab.taskProgress[taskId] ?? { taskId, completed: false, checklist: {} };
-    const taskProgress = { ...lab.taskProgress, [taskId]: { ...task, completed } };
-    const allDone = Object.values(taskProgress).every((t) => t.completed);
-    const labs = {
-      ...get().labs,
-      [labId]: { ...lab, status: allDone ? ('completed' as const) : ('in-progress' as const), taskProgress },
-    };
-    set({ labs });
-    void persist({
-      completedLessons: get().completedLessons,
-      knowledgeCheckResults: get().knowledgeCheckResults,
-      labs,
-    });
-  },
-}));
+    markLessonComplete: (lessonId) => {
+      set({ completedLessons: { ...get().completedLessons, [lessonId]: true as const } });
+      persistCurrent();
+    },
+
+    recordKnowledgeCheckAnswer: (lessonId, questionId, correct) => {
+      const forLesson = { ...(get().knowledgeCheckResults[lessonId] ?? {}), [questionId]: correct };
+      set({ knowledgeCheckResults: { ...get().knowledgeCheckResults, [lessonId]: forLesson } });
+      persistCurrent();
+    },
+
+    setLabChecklistItem: (labId, taskId, item, checked) => {
+      const lab = get().labs[labId] ?? { labId, status: 'in-progress' as const, taskProgress: {} };
+      const task = lab.taskProgress[taskId] ?? { taskId, completed: false, checklist: {} };
+      const checklist = { ...task.checklist, [item]: checked };
+      const taskProgress = { ...lab.taskProgress, [taskId]: { ...task, checklist } };
+      set({ labs: { ...get().labs, [labId]: { ...lab, taskProgress } } });
+      persistCurrent();
+    },
+
+    setLabTaskCompleted: (labId, taskId, completed) => {
+      const lab = get().labs[labId] ?? { labId, status: 'in-progress' as const, taskProgress: {} };
+      const task = lab.taskProgress[taskId] ?? { taskId, completed: false, checklist: {} };
+      const taskProgress = { ...lab.taskProgress, [taskId]: { ...task, completed } };
+      const allDone = Object.values(taskProgress).every((t) => t.completed);
+      set({
+        labs: {
+          ...get().labs,
+          [labId]: { ...lab, status: allDone ? ('completed' as const) : ('in-progress' as const), taskProgress },
+        },
+      });
+      persistCurrent();
+    },
+  };
+});
