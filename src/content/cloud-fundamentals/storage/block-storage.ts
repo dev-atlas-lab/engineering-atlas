@@ -1,10 +1,7 @@
-import type { ConceptMeta, Lesson } from '../../types';
-import { storageModelExplorerScene } from './scenes';
+import type { ConceptContentModule, LessonBody } from '../../types';
+import { storageModelExplorerScene } from './block-storage.scenes';
 
-const storageModels: Lesson = {
-  id: 'storage-models-block-file-object',
-  title: 'Storage Models: Block, File, and Object',
-  kind: 'concept',
+const storageModels: LessonBody = {
   learningObjectives: [
     'Distinguish block, file, and object storage by how data is addressed and accessed',
     'Match a workload to the storage model that fits its access pattern',
@@ -77,10 +74,7 @@ const storageModels: Lesson = {
   ],
 };
 
-const howBlockStorageWorks: Lesson = {
-  id: 'how-block-storage-works',
-  title: 'How Block Storage Works',
-  kind: 'concept',
+const howBlockStorageWorks: LessonBody = {
   learningObjectives: [
     'Explain how a network-attached block volume appears to a VM as a local disk',
     'Describe the zone scope and attachment model of cloud block volumes',
@@ -140,10 +134,7 @@ const howBlockStorageWorks: Lesson = {
   ],
 };
 
-const blockPerformance: Lesson = {
-  id: 'block-storage-performance',
-  title: 'Storage Performance: IOPS, Throughput, and Latency',
-  kind: 'concept',
+const blockPerformance: LessonBody = {
   learningObjectives: [
     'Define IOPS, throughput, and latency and how they relate',
     'Identify the volume-level and VM-level limits that cap storage performance',
@@ -213,10 +204,7 @@ const blockPerformance: Lesson = {
   ],
 };
 
-const snapshotsAndBackup: Lesson = {
-  id: 'snapshots-and-backup',
-  title: 'Snapshots, Backup, and Recovery',
-  kind: 'concept',
+const snapshotsAndBackup: LessonBody = {
   learningObjectives: [
     'Distinguish replication, snapshots, and backups by what each protects against',
     'Explain crash-consistent versus application-consistent snapshots',
@@ -278,11 +266,7 @@ const snapshotsAndBackup: Lesson = {
   ],
 };
 
-const azureManagedDisks: Lesson = {
-  id: 'azure-managed-disks',
-  title: 'Azure Managed Disks',
-  kind: 'provider',
-  providerId: 'azure',
+const azureManagedDisks: LessonBody = {
   learningObjectives: ['Map Azure Managed Disks onto the block storage model'],
   sections: [
     {
@@ -322,11 +306,7 @@ const azureManagedDisks: Lesson = {
   },
 };
 
-const awsEbs: Lesson = {
-  id: 'aws-ebs',
-  title: 'Amazon EBS',
-  kind: 'provider',
-  providerId: 'aws',
+const awsEbs: LessonBody = {
   learningObjectives: ['Map Amazon EBS onto the block storage model'],
   sections: [
     {
@@ -366,10 +346,7 @@ const awsEbs: Lesson = {
   },
 };
 
-const blockComparison: Lesson = {
-  id: 'block-storage-comparison',
-  title: 'Comparison: Azure Managed Disks vs. Amazon EBS',
-  kind: 'comparison',
+const blockComparison: LessonBody = {
   learningObjectives: ['Compare Azure Managed Disks and Amazon EBS, including their different answers to zone failure'],
   sections: [
     {
@@ -409,20 +386,16 @@ const blockComparison: Lesson = {
   ],
 };
 
-export const blockStorage: ConceptMeta = {
-  id: 'block-storage',
-  title: 'Block Storage',
-  description:
-    'Low-level storage volumes attached to compute instances, including IOPS/throughput characteristics, durability and replication options, and lifecycle management.',
-  status: 'available',
-  learningObjectives: [
-    'Distinguish block, file, and object storage and match workloads to each',
-    'Explain how network-attached block volumes work, including their zone scope',
-    'Reason about IOPS, throughput, latency, and the limits that cap them',
-    'Use snapshots and backups appropriately, and compare Azure Managed Disks with Amazon EBS',
-  ],
-  prerequisites: ['virtual-machines'],
-  relatedConcepts: ['object-storage', 'file-storage', 'virtual-machines', 'regions-and-availability-zones'],
-  estimatedMinutes: 75,
-  lessons: [storageModels, howBlockStorageWorks, blockPerformance, snapshotsAndBackup, azureManagedDisks, awsEbs, blockComparison],
+export const content: ConceptContentModule = {
+  lessons: {
+    'storage-models-block-file-object': storageModels,
+    'how-block-storage-works': howBlockStorageWorks,
+    'block-storage-performance': blockPerformance,
+    'snapshots-and-backup': snapshotsAndBackup,
+    'azure-managed-disks': azureManagedDisks,
+    'aws-ebs': awsEbs,
+    'block-storage-comparison': blockComparison,
+  },
+  labs: {},
+  simulations: {},
 };

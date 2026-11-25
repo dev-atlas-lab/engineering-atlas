@@ -1,10 +1,7 @@
-import type { ConceptMeta, LabDefinition, Lesson } from '../../types';
-import { dnsResolutionScene } from './scenes';
+import type { ConceptContentModule, LabBody, LessonBody } from '../../types';
+import { dnsResolutionScene } from './dns-and-content-delivery.scenes';
 
-const howDnsWorks: Lesson = {
-  id: 'how-dns-resolution-works',
-  title: 'How DNS Resolution Works',
-  kind: 'concept',
+const howDnsWorks: LessonBody = {
   learningObjectives: [
     'Trace a recursive DNS lookup from the client to an authoritative server',
     'Explain how TTLs and caching affect how quickly DNS changes take effect',
@@ -64,10 +61,7 @@ const howDnsWorks: Lesson = {
   ],
 };
 
-const dnsInCloudNetworks: Lesson = {
-  id: 'dns-in-cloud-networks',
-  title: 'DNS in Cloud Networks',
-  kind: 'concept',
+const dnsInCloudNetworks: LessonBody = {
   learningObjectives: [
     'Distinguish public DNS zones from private zones linked to virtual networks',
     'Explain how resources inside a virtual network resolve names',
@@ -117,10 +111,7 @@ const dnsInCloudNetworks: Lesson = {
   ],
 };
 
-const contentDelivery: Lesson = {
-  id: 'dns-and-content-delivery-together',
-  title: 'DNS and Content Delivery Together',
-  kind: 'concept',
+const contentDelivery: LessonBody = {
   learningObjectives: ['Explain how DNS directs users to edge locations and healthy endpoints'],
   sections: [
     {
@@ -148,11 +139,7 @@ const contentDelivery: Lesson = {
   ],
 };
 
-const azureDns: Lesson = {
-  id: 'azure-dns',
-  title: 'Azure DNS',
-  kind: 'provider',
-  providerId: 'azure',
+const azureDns: LessonBody = {
   learningObjectives: ['Map Azure’s DNS services onto the general model, including what they do not cover'],
   sections: [
     {
@@ -189,11 +176,7 @@ const azureDns: Lesson = {
   },
 };
 
-const route53: Lesson = {
-  id: 'amazon-route-53',
-  title: 'Amazon Route 53',
-  kind: 'provider',
-  providerId: 'aws',
+const route53: LessonBody = {
   learningObjectives: ['Map Amazon Route 53 onto the general model, including its broader scope'],
   sections: [
     {
@@ -230,10 +213,7 @@ const route53: Lesson = {
   },
 };
 
-const dnsComparison: Lesson = {
-  id: 'dns-comparison',
-  title: 'Comparison: Azure DNS vs. Amazon Route 53',
-  kind: 'comparison',
+const dnsComparison: LessonBody = {
   learningObjectives: ['Compare the scope of Azure DNS and Amazon Route 53 accurately'],
   sections: [
     {
@@ -274,10 +254,7 @@ const dnsComparison: Lesson = {
   ],
 };
 
-const dnsLab: LabDefinition = {
-  id: 'trace-dns-resolution-locally',
-  title: 'Trace DNS Resolution Locally',
-  type: 'hands-on',
+const dnsLab: LabBody = {
   difficulty: 'beginner',
   estimatedTime: '15 minutes',
   description:
@@ -332,20 +309,17 @@ const dnsLab: LabDefinition = {
   },
 };
 
-export const dnsAndContentDelivery: ConceptMeta = {
-  id: 'dns-and-content-delivery',
-  title: 'DNS and Content Delivery',
-  description: 'Domain name resolution and global content distribution for fast, reliable access.',
-  status: 'available',
-  learningObjectives: [
-    'Trace recursive DNS resolution and reason about TTLs and caching',
-    'Use public and private zones and the in-network resolver correctly',
-    'Explain how DNS steers users to edge locations and healthy endpoints',
-    'Compare Azure DNS and Amazon Route 53 by actual scope',
-  ],
-  prerequisites: ['virtual-networks'],
-  relatedConcepts: ['connecting-networks', 'data-centers-and-edge-locations', 'global-traffic-distribution'],
-  estimatedMinutes: 55,
-  lessons: [howDnsWorks, dnsInCloudNetworks, contentDelivery, azureDns, route53, dnsComparison],
-  labs: [dnsLab],
+export const content: ConceptContentModule = {
+  lessons: {
+    'how-dns-resolution-works': howDnsWorks,
+    'dns-in-cloud-networks': dnsInCloudNetworks,
+    'dns-and-content-delivery-together': contentDelivery,
+    'azure-dns': azureDns,
+    'amazon-route-53': route53,
+    'dns-comparison': dnsComparison,
+  },
+  labs: {
+    'trace-dns-resolution-locally': dnsLab,
+  },
+  simulations: {},
 };

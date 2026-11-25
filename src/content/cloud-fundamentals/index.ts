@@ -1,4 +1,7 @@
-import type { Domain, Category, ConceptMeta, Lesson, LabDefinition } from '../types';
+// The eager curriculum index: metadata only (titles, status, lesson and lab
+// outlines). It must never import a concept content module — those load per
+// concept through ./concept-loaders.ts. A test guards this boundary.
+import type { Domain, Category, ConceptMeta, LessonMeta, LabMeta } from '../types';
 import { cloudComputingModels } from './categories/cloud-computing-models';
 import { globalInfrastructure } from './global-infrastructure';
 import { compute } from './compute';
@@ -10,7 +13,7 @@ import { loadBalancing } from './categories/load-balancing';
 import { scalabilityAndReliability } from './categories/scalability-and-reliability';
 import { monitoringAndObservability } from './categories/monitoring-and-observability';
 
-export type { ConceptStatus, Domain, Category, ConceptMeta, Lesson, LabDefinition } from '../types';
+export type { ConceptStatus, Domain, Category, ConceptMeta, LessonMeta, LabMeta } from '../types';
 
 export const cloudFundamentals: Domain = {
   id: 'cloud-fundamentals',
@@ -45,15 +48,22 @@ export function findConcept(domainId: string, categoryId: string, conceptId: str
   return findCategory(domainId, categoryId)?.concepts.find((c) => c.id === conceptId);
 }
 
-export function findLesson(
-  domainId: string,
-  categoryId: string,
-  conceptId: string,
-  lessonId: string,
-): Lesson | undefined {
-  return findConcept(domainId, categoryId, conceptId)?.lessons?.find((l) => l.id === lessonId);
+/** Concept ids are unique across the domain (enforced by tests), so a
+ *  concept can be found by id alone — which is how content is loaded. */
+export function findConceptById(conceptId: string): ConceptMeta | undefined {
+  for (const domain of domains) {
+    for (const category of domain.categories) {
+      const concept = category.concepts.find((c) => c.id === conceptId);
+      if (concept) return concept;
+    }
+  }
+  return undefined;
 }
 
-export function findLab(domainId: string, categoryId: string, conceptId: string, labId: string): LabDefinition | undefined {
-  return findConcept(domainId, categoryId, conceptId)?.labs?.find((l) => l.id === labId);
+export function findLessonMeta(concept: ConceptMeta, lessonId: string): LessonMeta | undefined {
+  return concept.lessons?.find((l) => l.id === lessonId);
+}
+
+export function findLabMeta(concept: ConceptMeta, labId: string): LabMeta | undefined {
+  return concept.labs?.find((l) => l.id === labId);
 }

@@ -1,11 +1,10 @@
-import type { ConceptMeta, LabDefinition, Lesson } from '../../types';
-import { publicPrivateScene } from './scenes';
+import type { ConceptContentModule, LabBody, LessonBody } from '../../types';
+import { publicPrivateScene } from './subnets-and-routing.scenes';
 import { packetRoutingSimulation, type RoutingState } from './routing-simulation';
+import { renderRoutingState } from './routing-view';
+import { bindSimulation } from '../../../engines/lab/bind-simulation';
 
-const howRoutingWorks: Lesson = {
-  id: 'how-routing-works',
-  title: 'How Routing Works: Route Tables and Longest Prefix Match',
-  kind: 'concept',
+const howRoutingWorks: LessonBody = {
   learningObjectives: [
     'Explain how a route table chooses a next hop with longest prefix match',
     'Identify the common next-hop types in a cloud network',
@@ -70,10 +69,7 @@ const howRoutingWorks: Lesson = {
   ],
 };
 
-const internetAndNat: Lesson = {
-  id: 'internet-access-and-nat',
-  title: 'Internet Access and NAT',
-  kind: 'concept',
+const internetAndNat: LessonBody = {
   learningObjectives: [
     'Explain how a resource with a private IP reaches the internet',
     'Distinguish a public IP from a NAT gateway in terms of inbound reachability',
@@ -135,10 +131,7 @@ const internetAndNat: Lesson = {
   ],
 };
 
-const publicVsPrivate: Lesson = {
-  id: 'public-vs-private-access',
-  title: 'Public vs. Private Access',
-  kind: 'concept',
+const publicVsPrivate: LessonBody = {
   learningObjectives: [
     'Explain the boundaries that make a resource reachable or unreachable',
     'Explain why private addressing alone does not make a resource secure',
@@ -194,11 +187,7 @@ const publicVsPrivate: Lesson = {
   ],
 };
 
-const azureRouting: Lesson = {
-  id: 'azure-routing-and-nat',
-  title: 'Azure Routing and NAT',
-  kind: 'provider',
-  providerId: 'azure',
+const azureRouting: LessonBody = {
   learningObjectives: ['Map Azure system routes, route tables, and NAT Gateway onto the general model'],
   sections: [
     {
@@ -239,11 +228,7 @@ const azureRouting: Lesson = {
   },
 };
 
-const awsRouting: Lesson = {
-  id: 'aws-routing-and-nat',
-  title: 'AWS Routing and NAT',
-  kind: 'provider',
-  providerId: 'aws',
+const awsRouting: LessonBody = {
   learningObjectives: ['Map AWS route tables, internet gateways, and NAT gateways onto the general model'],
   sections: [
     {
@@ -284,10 +269,7 @@ const awsRouting: Lesson = {
   },
 };
 
-const routingComparison: Lesson = {
-  id: 'routing-comparison',
-  title: 'Comparison: Azure vs. AWS Routing and NAT',
-  kind: 'comparison',
+const routingComparison: LessonBody = {
   learningObjectives: ['Compare where internet access and NAT are configured on each platform'],
   sections: [
     {
@@ -326,10 +308,7 @@ const routingComparison: Lesson = {
   ],
 };
 
-const routingLab: LabDefinition = {
-  id: 'packet-routing-lab',
-  title: 'Packet Routing Lab',
-  type: 'simulation',
+const routingLab: LabBody = {
   difficulty: 'intermediate',
   estimatedTime: '20 minutes',
   description:
@@ -377,21 +356,19 @@ const routingLab: LabDefinition = {
   },
 };
 
-export const subnetsAndRouting: ConceptMeta = {
-  id: 'subnets-and-routing',
-  title: 'Subnets and Routing',
-  description:
-    'Network segmentation, routing tables, public vs. private subnets, internet gateways, and NAT for outbound-only connectivity.',
-  status: 'available',
-  learningObjectives: [
-    'Explain how route tables and longest prefix match choose a next hop',
-    'Give private resources outbound internet access with NAT while keeping them unreachable from the internet',
-    'Explain why private addressing alone does not make a resource secure',
-    'Compare Azure’s implicit internet routing with AWS’s explicit gateways',
-  ],
-  prerequisites: ['virtual-networks'],
-  relatedConcepts: ['virtual-networks', 'connecting-networks', 'network-security'],
-  estimatedMinutes: 75,
-  lessons: [howRoutingWorks, internetAndNat, publicVsPrivate, azureRouting, awsRouting, routingComparison],
-  labs: [routingLab],
+export const content: ConceptContentModule = {
+  lessons: {
+    'how-routing-works': howRoutingWorks,
+    'internet-access-and-nat': internetAndNat,
+    'public-vs-private-access': publicVsPrivate,
+    'azure-routing-and-nat': azureRouting,
+    'aws-routing-and-nat': awsRouting,
+    'routing-comparison': routingComparison,
+  },
+  labs: {
+    'packet-routing-lab': routingLab,
+  },
+  simulations: {
+    'packet-routing-lab': bindSimulation(packetRoutingSimulation, renderRoutingState),
+  },
 };

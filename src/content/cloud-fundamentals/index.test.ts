@@ -1,16 +1,17 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import {
   cloudFundamentals,
   domains,
   findDomain,
   findCategory,
   findConcept,
-  findLesson,
-  findLab,
+  findConceptById,
+  findLessonMeta,
+  findLabMeta,
 } from './index';
-import { labSimulations } from './lab-simulations';
+import { conceptLoaders, createConceptContentLoader, type LoadedConcept } from './concept-loaders';
 import { providers } from '../providers';
-import type { ChallengeLab, ConceptMeta, Lesson, LabDefinition, SimulationLab } from '../types';
+import type { ChallengeLab, ConceptMeta, LabDefinition, Lesson, SimulationLab } from '../types';
 
 const validStatuses = ['available', 'in-development', 'coming-soon'];
 
@@ -18,46 +19,48 @@ const validStatuses = ['available', 'in-development', 'coming-soon'];
 // expected to be Active; every concept elsewhere is expected to be Coming soon.
 const ACTIVE_CATEGORIES = ['compute', 'global-infrastructure', 'storage', 'networking'];
 
-describe('Cloud Fundamentals content index — structure', () => {
+// Concept ids are route segments; changing one breaks links and progress.
+const EXPECTED_CONCEPT_IDS = [
+  'what-is-cloud-computing', 'cloud-service-models', 'cloud-deployment-models',
+  'regions-and-availability-zones', 'data-centers-and-edge-locations', 'geographic-redundancy-and-data-residency',
+  'virtual-machines', 'containers', 'serverless-functions',
+  'block-storage', 'object-storage', 'file-storage',
+  'virtual-networks', 'subnets-and-routing', 'connecting-networks', 'dns-and-content-delivery',
+  'identity-and-authentication', 'authorization-and-policies', 'workload-and-federated-identity',
+  'security-fundamentals', 'encryption-and-key-management', 'network-security', 'security-monitoring-and-compliance',
+  'load-balancing-fundamentals', 'application-load-balancing', 'network-load-balancing', 'global-traffic-distribution',
+  'auto-scaling', 'high-availability', 'disaster-recovery',
+  'observability-fundamentals', 'metrics-and-alerting', 'logging', 'distributed-tracing',
+];
+
+const allConcepts: ConceptMeta[] = cloudFundamentals.categories.flatMap((c) => c.concepts);
+const authoredConcepts = allConcepts.filter((c) => (c.lessons?.length ?? 0) > 0);
+
+describe('Cloud Fundamentals metadata index — structure', () => {
   it('has exactly 10 categories', () => {
     expect(cloudFundamentals.categories).toHaveLength(10);
   });
 
+  it('keeps all 34 concept ids unchanged and in place', () => {
+    expect(allConcepts.map((c) => c.id)).toEqual(EXPECTED_CONCEPT_IDS);
+  });
+
   it('every category has at least one concept', () => {
-    for (const category of cloudFundamentals.categories) {
-      expect(category.concepts.length).toBeGreaterThan(0);
+    for (const category of cloudFundamentals.categories) expect(category.concepts.length).toBeGreaterThan(0);
+  });
+
+  it('every concept has a valid status and a non-empty description', () => {
+    for (const concept of allConcepts) {
+      expect(validStatuses).toContain(concept.status);
+      expect(concept.description.length).toBeGreaterThan(0);
     }
   });
 
-  it('every concept has a valid status', () => {
-    for (const category of cloudFundamentals.categories) {
-      for (const concept of category.concepts) {
-        expect(validStatuses).toContain(concept.status);
-      }
-    }
-  });
-
-  it('every concept has a non-empty description', () => {
-    for (const category of cloudFundamentals.categories) {
-      for (const concept of category.concepts) {
-        expect(concept.description.length).toBeGreaterThan(0);
-      }
-    }
-  });
-
-  it('all category and concept IDs are unique within their scope', () => {
+  it('category ids, and concept ids across the whole domain, are unique', () => {
     const categoryIds = cloudFundamentals.categories.map((c) => c.id);
     expect(new Set(categoryIds).size).toBe(categoryIds.length);
-
-    for (const category of cloudFundamentals.categories) {
-      const conceptIds = category.concepts.map((c) => c.id);
-      expect(new Set(conceptIds).size).toBe(conceptIds.length);
-    }
-  });
-
-  it('concept IDs are unique across the whole domain, so no two routes share a concept id', () => {
-    const ids = cloudFundamentals.categories.flatMap((c) => c.concepts.map((concept) => concept.id));
-    expect(new Set(ids).size).toBe(ids.length);
+    const conceptIds = allConcepts.map((c) => c.id);
+    expect(new Set(conceptIds).size).toBe(conceptIds.length);
   });
 
   it('only the authored categories are Active — every other concept stays Coming soon', () => {
@@ -68,51 +71,171 @@ describe('Cloud Fundamentals content index — structure', () => {
       }
     }
   });
-});
 
-describe('content schema validation — domain-wide identity', () => {
-  const allLessons = cloudFundamentals.categories.flatMap((c) => c.concepts.flatMap((concept) => concept.lessons ?? []));
-  const allLabs = cloudFundamentals.categories.flatMap((c) => c.concepts.flatMap((concept) => concept.labs ?? []));
+  it('every Active concept has learning objectives and a lesson outline in its metadata', () => {
+    for (const concept of allConcepts.filter((c) => c.status === 'available')) {
+      expect(concept.learningObjectives?.length, concept.id).toBeGreaterThan(0);
+      expect(concept.lessons?.length, concept.id).toBeGreaterThan(0);
+    }
+  });
 
   // progressStore keys completion by bare lesson/lab id, so ids must be
   // unique across the domain, not just within their concept.
-  it('lesson IDs are unique across the whole domain', () => {
-    const ids = allLessons.map((l) => l.id);
-    expect(ids.filter((id, i) => ids.indexOf(id) !== i)).toEqual([]);
+  it('lesson and lab ids are unique across the whole domain and never collide', () => {
+    const lessonIds = authoredConcepts.flatMap((c) => (c.lessons ?? []).map((l) => l.id));
+    const labIds = authoredConcepts.flatMap((c) => (c.labs ?? []).map((l) => l.id));
+    expect(lessonIds.filter((id, i) => lessonIds.indexOf(id) !== i)).toEqual([]);
+    expect(labIds.filter((id, i) => labIds.indexOf(id) !== i)).toEqual([]);
+    expect(labIds.filter((id) => lessonIds.includes(id))).toEqual([]);
   });
 
-  it('lab IDs are unique across the whole domain and never collide with lesson IDs', () => {
-    const labIds = allLabs.map((l) => l.id);
-    expect(new Set(labIds).size).toBe(labIds.length);
-    const lessonIds = new Set(allLessons.map((l) => l.id));
-    expect(labIds.filter((id) => lessonIds.has(id))).toEqual([]);
-  });
-
-  it('every simulation lab has a registered simulation whose id matches the lab content', () => {
-    for (const lab of allLabs.filter((l) => l.type === 'simulation')) {
-      const entry = labSimulations[lab.id];
-      expect(entry, `no simulation registered for ${lab.id}`).toBeDefined();
-      expect(entry?.simulationId).toBe((lab.content as SimulationLab).simulationId);
-    }
-  });
-
-  it('the simulation registry has no entries for labs that do not exist', () => {
-    const simulationLabIds = new Set(allLabs.filter((l) => l.type === 'simulation').map((l) => l.id));
-    for (const id of Object.keys(labSimulations)) expect(simulationLabIds.has(id)).toBe(true);
-  });
-
-  it('every provider lesson references a registered provider', () => {
+  it('every provider lesson in the outline names a registered provider', () => {
     const providerIds = new Set(providers.map((p) => p.id));
-    for (const lesson of allLessons.filter((l) => l.kind === 'provider')) {
-      expect(providerIds.has(lesson.providerId!)).toBe(true);
+    for (const lesson of authoredConcepts.flatMap((c) => c.lessons ?? []).filter((l) => l.kind === 'provider')) {
+      expect(providerIds.has(lesson.providerId!), lesson.id).toBe(true);
     }
   });
 
-  it('every lesson has at least one learning objective', () => {
-    for (const lesson of allLessons) expect(lesson.learningObjectives.length, lesson.id).toBeGreaterThan(0);
+  it('every concept listed in relatedConcepts/prerequisites resolves to a real concept', () => {
+    const ids = new Set(allConcepts.map((c) => c.id));
+    for (const concept of allConcepts) {
+      for (const relatedId of [...(concept.relatedConcepts ?? []), ...(concept.prerequisites ?? [])]) {
+        expect(ids.has(relatedId), `${concept.id} → ${relatedId}`).toBe(true);
+      }
+    }
+  });
+});
+
+describe('metadata/content boundary', () => {
+  // The source of every module in the eager index graph: the domain index,
+  // each category's index and meta, and the Coming-soon category stubs.
+  const eagerSources = import.meta.glob<string>(['./index.ts', './*/index.ts', './*/meta.ts', './categories/*.ts'], {
+    query: '?raw',
+    import: 'default',
+    eager: true,
   });
 
-  it('every visualization has at least one state, and sequence scenes have one state per message plus the initial state', () => {
+  it('the eager index graph imports only metadata modules — never a concept content module', () => {
+    expect(Object.keys(eagerSources).length).toBeGreaterThan(10);
+    const allowed = /^(\.\.\/types|\.\.\/\.\.\/types|\.\/meta|\.\/categories\/[\w-]+|\.\/(compute|global-infrastructure|storage|networking))$/;
+    const offenders: string[] = [];
+    for (const [file, source] of Object.entries(eagerSources)) {
+      for (const [, specifier] of source.matchAll(/from '([^']+)'/g)) {
+        if (!allowed.test(specifier!)) offenders.push(`${file} → ${specifier}`);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
+  it('there is a loader for every concept with a lesson outline, and no other loaders', () => {
+    expect(Object.keys(conceptLoaders).sort()).toEqual(authoredConcepts.map((c) => c.id).sort());
+  });
+});
+
+describe('content lookup functions', () => {
+  it('findDomain, findCategory, and findConcept resolve valid ids and reject invalid ones', () => {
+    expect(findDomain('cloud-fundamentals')).toBe(cloudFundamentals);
+    expect(findDomain('nonexistent')).toBeUndefined();
+    expect(findCategory('cloud-fundamentals', 'compute')?.title).toBe('Compute');
+    expect(findCategory('cloud-fundamentals', 'nope')).toBeUndefined();
+    expect(findCategory('nope', 'compute')).toBeUndefined();
+    expect(findConcept('cloud-fundamentals', 'compute', 'virtual-machines')?.title).toBe('Virtual Machines');
+    expect(findConcept('cloud-fundamentals', 'compute', 'nope')).toBeUndefined();
+  });
+
+  it('findConceptById resolves any concept by id alone', () => {
+    expect(findConceptById('dns-and-content-delivery')?.title).toBe('DNS and Content Delivery');
+    expect(findConceptById('nope')).toBeUndefined();
+  });
+
+  it('findLessonMeta and findLabMeta resolve outline entries without loading content', () => {
+    const vm = findConceptById('virtual-machines')!;
+    expect(findLessonMeta(vm, 'vm-architecture')?.title).toBe('VM Architecture');
+    expect(findLessonMeta(vm, 'nope')).toBeUndefined();
+    expect(findLabMeta(vm, 'vm-resource-allocation-lab')?.title).toBe('Design a VM Architecture');
+  });
+
+  it('domains array contains cloud-fundamentals', () => {
+    expect(domains).toHaveLength(1);
+    expect(domains[0]?.id).toBe('cloud-fundamentals');
+  });
+});
+
+describe('content schema validation — loaded concept content', () => {
+  let loaded: LoadedConcept[] = [];
+  let allLessons: Lesson[] = [];
+  let allLabs: LabDefinition[] = [];
+
+  beforeAll(async () => {
+    const loader = createConceptContentLoader(conceptLoaders);
+    loaded = await Promise.all(authoredConcepts.map((c) => loader.load(c.id)));
+    allLessons = loaded.flatMap((c) => c.lessons);
+    allLabs = loaded.flatMap((c) => c.labs);
+  });
+
+  it('every authored concept loads, with lessons and labs in metadata order', () => {
+    expect(loaded).toHaveLength(authoredConcepts.length);
+    for (const concept of loaded) {
+      const meta = findConceptById(concept.conceptId)!;
+      expect(concept.lessons.map((l) => l.id)).toEqual((meta.lessons ?? []).map((l) => l.id));
+      expect(concept.labs.map((l) => l.id)).toEqual((meta.labs ?? []).map((l) => l.id));
+    }
+  });
+
+  it('loaded lessons carry their title and kind from the metadata, not a second copy', () => {
+    for (const concept of loaded) {
+      const meta = findConceptById(concept.conceptId)!;
+      concept.lessons.forEach((lesson, i) => {
+        expect({ id: lesson.id, title: lesson.title, kind: lesson.kind }).toEqual({
+          id: meta.lessons![i]!.id,
+          title: meta.lessons![i]!.title,
+          kind: meta.lessons![i]!.kind,
+        });
+      });
+    }
+  });
+
+  it('every simulation lab has a simulation, owned by its concept, whose id matches the lab content', () => {
+    for (const concept of loaded) {
+      for (const lab of concept.labs.filter((l) => l.type === 'simulation')) {
+        const entry = concept.simulations[lab.id];
+        expect(entry, `no simulation for ${lab.id}`).toBeDefined();
+        expect(entry?.simulationId).toBe((lab.content as SimulationLab).simulationId);
+      }
+      const simulationLabIds = new Set(concept.labs.filter((l) => l.type === 'simulation').map((l) => l.id));
+      for (const id of Object.keys(concept.simulations)) expect(simulationLabIds.has(id), id).toBe(true);
+    }
+  });
+
+  it('every provider-kind lesson has matching providerDetails', () => {
+    for (const lesson of allLessons.filter((l) => l.kind === 'provider')) {
+      expect(lesson.providerId, lesson.id).toBeDefined();
+      expect(lesson.providerDetails?.providerId, lesson.id).toBe(lesson.providerId);
+      expect(lesson.providerDetails?.serviceName.length).toBeGreaterThan(0);
+      expect(lesson.providerDetails?.documentationUrl).toMatch(/^https:\/\//);
+    }
+  });
+
+  it('every lesson has learning objectives and at least one section with at least one block', () => {
+    for (const lesson of allLessons) {
+      expect(lesson.learningObjectives.length, lesson.id).toBeGreaterThan(0);
+      expect(lesson.sections.length, lesson.id).toBeGreaterThan(0);
+      for (const section of lesson.sections) expect(section.blocks.length, lesson.id).toBeGreaterThan(0);
+    }
+  });
+
+  it('every knowledge check question has exactly one correct option for single-choice/scenario, at least one for multi-select', () => {
+    for (const lesson of allLessons) {
+      for (const question of lesson.knowledgeCheck ?? []) {
+        const correctCount = question.options.filter((o) => o.correct).length;
+        if (question.type === 'multi-select') expect(correctCount, question.id).toBeGreaterThan(0);
+        else expect(correctCount, question.id).toBe(1);
+        for (const option of question.options) expect(option.explanation.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
+  it('every visualization has states, sequence scenes have one state per message plus the initial state, and edges reference real nodes', () => {
     for (const lesson of allLessons) {
       const scene = lesson.visualization;
       if (!scene) continue;
@@ -125,7 +248,15 @@ describe('content schema validation — domain-wide identity', () => {
     }
   });
 
-  it('every challenge lab solution only uses decision and option ids that exist', () => {
+  it('every lab’s content shape matches its declared type', () => {
+    for (const lab of allLabs) {
+      if (lab.type === 'simulation') expect('instructions' in lab.content, lab.id).toBe(true);
+      else if (lab.type === 'hands-on') expect('tasks' in lab.content, lab.id).toBe(true);
+      else expect('decisions' in lab.content, lab.id).toBe(true);
+    }
+  });
+
+  it('every challenge solution only uses decision and option ids that exist', () => {
     for (const lab of allLabs.filter((l) => l.type === 'challenge')) {
       const content = lab.content as ChallengeLab;
       for (const solution of content.solutions) {
@@ -136,146 +267,6 @@ describe('content schema validation — domain-wide identity', () => {
             expect(decision!.options.some((o) => o.id === optionId), `${lab.id}:${solution.id}:${optionId}`).toBe(true);
           }
         }
-      }
-    }
-  });
-});
-
-describe('content lookup functions', () => {
-  it('findDomain returns the domain for a valid ID', () => {
-    expect(findDomain('cloud-fundamentals')).toBe(cloudFundamentals);
-  });
-
-  it('findDomain returns undefined for invalid ID', () => {
-    expect(findDomain('nonexistent')).toBeUndefined();
-  });
-
-  it('findCategory returns the category for valid IDs', () => {
-    const cat = findCategory('cloud-fundamentals', 'compute');
-    expect(cat?.title).toBe('Compute');
-  });
-
-  it('findCategory returns undefined for invalid IDs', () => {
-    expect(findCategory('cloud-fundamentals', 'nope')).toBeUndefined();
-    expect(findCategory('nope', 'compute')).toBeUndefined();
-  });
-
-  it('findConcept returns the concept for valid IDs', () => {
-    const concept = findConcept('cloud-fundamentals', 'compute', 'virtual-machines');
-    expect(concept?.title).toBe('Virtual Machines');
-  });
-
-  it('findConcept returns undefined for invalid IDs', () => {
-    expect(findConcept('cloud-fundamentals', 'compute', 'nope')).toBeUndefined();
-  });
-
-  it('findLesson resolves a lesson within an available concept', () => {
-    const lesson = findLesson('cloud-fundamentals', 'compute', 'virtual-machines', 'vm-architecture');
-    expect(lesson?.title).toBe('VM Architecture');
-  });
-
-  it('findLesson returns undefined for an unknown lesson id', () => {
-    expect(findLesson('cloud-fundamentals', 'compute', 'virtual-machines', 'nope')).toBeUndefined();
-  });
-
-  it('findLab resolves a lab within an available concept', () => {
-    const lab = findLab('cloud-fundamentals', 'compute', 'virtual-machines', 'vm-resource-allocation-lab');
-    expect(lab?.title).toBe('Design a VM Architecture');
-  });
-
-  it('domains array contains cloud-fundamentals', () => {
-    expect(domains).toHaveLength(1);
-    expect(domains[0]?.id).toBe('cloud-fundamentals');
-  });
-});
-
-describe('content schema validation — available concepts', () => {
-  const availableConcepts: ConceptMeta[] = cloudFundamentals.categories
-    .flatMap((c) => c.concepts)
-    .filter((c) => c.status === 'available');
-
-  it('at least one concept is available', () => {
-    expect(availableConcepts.length).toBeGreaterThan(0);
-  });
-
-  it('every available concept declares learning objectives and at least one lesson', () => {
-    for (const concept of availableConcepts) {
-      expect(concept.learningObjectives?.length).toBeGreaterThan(0);
-      expect(concept.lessons?.length).toBeGreaterThan(0);
-    }
-  });
-
-  it('lesson IDs are unique within each concept', () => {
-    for (const concept of availableConcepts) {
-      const ids = (concept.lessons ?? []).map((l) => l.id);
-      expect(new Set(ids).size).toBe(ids.length);
-    }
-  });
-
-  it('lab IDs are unique within each concept', () => {
-    for (const concept of availableConcepts) {
-      const ids = (concept.labs ?? []).map((l) => l.id);
-      expect(new Set(ids).size).toBe(ids.length);
-    }
-  });
-
-  it('every provider-kind lesson declares a providerId and matching providerDetails', () => {
-    const allLessons: Lesson[] = availableConcepts.flatMap((c) => c.lessons ?? []);
-    for (const lesson of allLessons) {
-      if (lesson.kind === 'provider') {
-        expect(lesson.providerId).toBeDefined();
-        expect(lesson.providerDetails?.providerId).toBe(lesson.providerId);
-        expect(lesson.providerDetails?.serviceName.length).toBeGreaterThan(0);
-        expect(lesson.providerDetails?.documentationUrl).toMatch(/^https:\/\//);
-      }
-    }
-  });
-
-  it('every lesson has at least one section with at least one block', () => {
-    const allLessons: Lesson[] = availableConcepts.flatMap((c) => c.lessons ?? []);
-    for (const lesson of allLessons) {
-      expect(lesson.sections.length).toBeGreaterThan(0);
-      for (const section of lesson.sections) {
-        expect(section.blocks.length).toBeGreaterThan(0);
-      }
-    }
-  });
-
-  it('every knowledge check question has exactly one correct option for single-choice/scenario, at least one for multi-select', () => {
-    const allLessons: Lesson[] = availableConcepts.flatMap((c) => c.lessons ?? []);
-    for (const lesson of allLessons) {
-      for (const question of lesson.knowledgeCheck ?? []) {
-        const correctCount = question.options.filter((o) => o.correct).length;
-        if (question.type === 'multi-select') {
-          expect(correctCount).toBeGreaterThan(0);
-        } else {
-          expect(correctCount).toBe(1);
-        }
-        for (const option of question.options) {
-          expect(option.explanation.length).toBeGreaterThan(0);
-        }
-      }
-    }
-  });
-
-  it('every lab’s content shape matches its declared type', () => {
-    const allLabs: LabDefinition[] = availableConcepts.flatMap((c) => c.labs ?? []);
-    for (const lab of allLabs) {
-      if (lab.type === 'simulation') {
-        expect('instructions' in lab.content).toBe(true);
-      } else if (lab.type === 'hands-on') {
-        expect('tasks' in lab.content).toBe(true);
-      } else if (lab.type === 'challenge') {
-        expect('decisions' in lab.content).toBe(true);
-      }
-    }
-  });
-
-  it('every concept listed in relatedConcepts/prerequisites resolves to a real concept in the domain', () => {
-    const allConceptIds = new Set(cloudFundamentals.categories.flatMap((c) => c.concepts).map((c) => c.id));
-    for (const concept of availableConcepts) {
-      for (const relatedId of [...(concept.relatedConcepts ?? []), ...(concept.prerequisites ?? [])]) {
-        expect(allConceptIds.has(relatedId)).toBe(true);
       }
     }
   });

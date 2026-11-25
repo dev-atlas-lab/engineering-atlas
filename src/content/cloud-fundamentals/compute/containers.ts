@@ -1,9 +1,6 @@
-import type { ConceptMeta, Lesson, LabDefinition } from '../../types';
+import type { ConceptContentModule, LabBody, LessonBody } from '../../types';
 
-const introductionToContainers: Lesson = {
-  id: 'introduction-to-containers',
-  title: 'Introduction to Containers',
-  kind: 'concept',
+const introductionToContainers: LessonBody = {
   learningObjectives: [
     'Explain how containers achieve isolation without a full guest OS',
     'Contrast container architecture with VM architecture',
@@ -86,10 +83,7 @@ const introductionToContainers: Lesson = {
   furtherReading: [{ label: 'Open Container Initiative image spec', url: 'https://github.com/opencontainers/image-spec' }],
 };
 
-const containerArchitecture: Lesson = {
-  id: 'container-architecture',
-  title: 'Container Architecture and Orchestration',
-  kind: 'concept',
+const containerArchitecture: LessonBody = {
   learningObjectives: ['Explain why running containers at scale requires an orchestrator, not just a container runtime'],
   sections: [
     {
@@ -127,11 +121,7 @@ const containerArchitecture: Lesson = {
   ],
 };
 
-const azureContainerServices: Lesson = {
-  id: 'azure-container-apps',
-  title: 'Azure Container Apps',
-  kind: 'provider',
-  providerId: 'azure',
+const azureContainerServices: LessonBody = {
   learningObjectives: ['Describe how Azure Container Apps manages scaling and ingress for containerized services'],
   sections: [
     {
@@ -178,11 +168,7 @@ const azureContainerServices: Lesson = {
   },
 };
 
-const awsEcsFargate: Lesson = {
-  id: 'aws-ecs-fargate',
-  title: 'AWS ECS and Fargate',
-  kind: 'provider',
-  providerId: 'aws',
+const awsEcsFargate: LessonBody = {
   learningObjectives: ['Distinguish the EC2 launch type from the Fargate launch type within Amazon ECS'],
   sections: [
     {
@@ -225,10 +211,7 @@ const awsEcsFargate: Lesson = {
   },
 };
 
-const containersComparison: Lesson = {
-  id: 'containers-architecture-comparison',
-  title: 'Architecture Comparison: Azure Container Apps vs. AWS ECS/Fargate',
-  kind: 'comparison',
+const containersComparison: LessonBody = {
   learningObjectives: ['Compare Azure Container Apps and AWS ECS/Fargate honestly, including where the mapping is asymmetric'],
   sections: [
     {
@@ -281,10 +264,7 @@ const containersComparison: Lesson = {
   ],
 };
 
-const localContainerLab: LabDefinition = {
-  id: 'run-and-inspect-a-container-locally',
-  title: 'Run and Inspect a Container Locally',
-  type: 'hands-on',
+const localContainerLab: LabBody = {
   difficulty: 'beginner',
   estimatedTime: '15 minutes',
   description: 'Run a container on your own machine and inspect how it isolates processes and resources, using Docker.',
@@ -333,19 +313,16 @@ const localContainerLab: LabDefinition = {
   },
 };
 
-export const containers: ConceptMeta = {
-  id: 'containers',
-  title: 'Containers',
-  description: 'Lightweight, portable execution environments that package applications with their dependencies.',
-  status: 'available',
-  learningObjectives: [
-    'Explain how containers isolate workloads without a hypervisor or guest kernel',
-    'Explain why running containers at scale requires an orchestrator',
-    'Compare Azure Container Apps and AWS ECS/Fargate without assuming a 1:1 mapping',
-  ],
-  prerequisites: ['virtual-machines'],
-  relatedConcepts: ['virtual-machines', 'serverless-functions'],
-  estimatedMinutes: 55,
-  lessons: [introductionToContainers, containerArchitecture, azureContainerServices, awsEcsFargate, containersComparison],
-  labs: [localContainerLab],
+export const content: ConceptContentModule = {
+  lessons: {
+    'introduction-to-containers': introductionToContainers,
+    'container-architecture': containerArchitecture,
+    'azure-container-apps': azureContainerServices,
+    'aws-ecs-fargate': awsEcsFargate,
+    'containers-architecture-comparison': containersComparison,
+  },
+  labs: {
+    'run-and-inspect-a-container-locally': localContainerLab,
+  },
+  simulations: {},
 };

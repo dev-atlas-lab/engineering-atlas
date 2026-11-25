@@ -1,39 +1,42 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import LabPage from './lab';
 
-function renderLab(path: string) {
+/** Renders a lab route and waits until its lazily loaded body is on screen
+ *  (immediately, if the concept's content is already cached). */
+async function renderLab(path: string) {
   const router = createMemoryRouter(
     [{ path: ':domainId/:categoryId/:conceptId/labs/:labId', element: <LabPage /> }],
     { initialEntries: [path] },
   );
   render(<RouterProvider router={router} />);
+  await waitFor(() => expect(screen.queryByText('Loading lab…')).not.toBeInTheDocument());
 }
 
 describe('LabPage — simulation lab', () => {
-  it('renders the simulation lab title, type, and parameters', () => {
-    renderLab('/cloud-fundamentals/compute/virtual-machines/labs/vm-resource-allocation-lab');
+  it('renders the simulation lab title, type, and parameters', async () => {
+    await renderLab('/cloud-fundamentals/compute/virtual-machines/labs/vm-resource-allocation-lab');
     expect(screen.getByRole('heading', { name: /Design a VM Architecture/ })).toBeInTheDocument();
     expect(screen.getByText('simulation lab')).toBeInTheDocument();
     expect(screen.getByText('Number of VMs requested')).toBeInTheDocument();
   });
 
-  it('renders validation rules against the live simulation state', () => {
-    renderLab('/cloud-fundamentals/compute/virtual-machines/labs/vm-resource-allocation-lab');
+  it('renders validation rules against the live simulation state', async () => {
+    await renderLab('/cloud-fundamentals/compute/virtual-machines/labs/vm-resource-allocation-lab');
     expect(screen.getByText('At least one VM is running')).toBeInTheDocument();
   });
 
-  it('shows a Back-to-concept link', () => {
-    renderLab('/cloud-fundamentals/compute/virtual-machines/labs/vm-resource-allocation-lab');
+  it('shows a Back-to-concept link', async () => {
+    await renderLab('/cloud-fundamentals/compute/virtual-machines/labs/vm-resource-allocation-lab');
     expect(screen.getByText(/Back to Virtual Machines/)).toBeInTheDocument();
   });
 });
 
 describe('LabPage — hands-on lab', () => {
-  it('renders environment, tasks, and the self-reported honesty note', () => {
-    renderLab('/cloud-fundamentals/compute/containers/labs/run-and-inspect-a-container-locally');
+  it('renders environment, tasks, and the self-reported honesty note', async () => {
+    await renderLab('/cloud-fundamentals/compute/containers/labs/run-and-inspect-a-container-locally');
     expect(screen.getByRole('heading', { name: /Run and Inspect a Container Locally/ })).toBeInTheDocument();
     expect(screen.getByText('hands-on lab')).toBeInTheDocument();
     expect(screen.getByText('Run a container')).toBeInTheDocument();
@@ -50,7 +53,7 @@ describe('LabPage — zone failure simulation', () => {
 
   it('fails validation when the zone holding every dependency fails', async () => {
     const user = userEvent.setup();
-    renderLab(path);
+    await renderLab(path);
     await user.selectOptions(screen.getByLabelText('Zone to fail'), '1');
     await user.click(screen.getByLabelText('Jump to last state'));
     expect(screen.getByText(/Service unavailable/)).toBeInTheDocument();
@@ -59,7 +62,7 @@ describe('LabPage — zone failure simulation', () => {
 
   it('passes every validation rule once the design survives a Zone 1 failure', async () => {
     const user = userEvent.setup();
-    renderLab(path);
+    await renderLab(path);
     await user.selectOptions(screen.getByLabelText('Web tier placement'), 'two-zones');
     await user.selectOptions(screen.getByLabelText('Database deployment'), 'zone-standby');
     await user.selectOptions(screen.getByLabelText('Zone to fail'), '1');
@@ -72,7 +75,7 @@ describe('LabPage — zone failure simulation', () => {
 
   it('resets to the initial state when Reset is pressed', async () => {
     const user = userEvent.setup();
-    renderLab(path);
+    await renderLab(path);
     await user.click(screen.getByLabelText('Jump to last state'));
     await user.click(screen.getByText('Reset simulation'));
     expect(screen.getByText(/Nothing deployed yet/)).toBeInTheDocument();
@@ -82,7 +85,7 @@ describe('LabPage — zone failure simulation', () => {
 describe('LabPage — architecture challenge', () => {
   it('assesses the optimal geography design', async () => {
     const user = userEvent.setup();
-    renderLab('/cloud-fundamentals/global-infrastructure/geographic-redundancy-and-data-residency/labs/choose-a-deployment-geography');
+    await renderLab('/cloud-fundamentals/global-infrastructure/geographic-redundancy-and-data-residency/labs/choose-a-deployment-geography');
     expect(screen.getByText('Evaluate My Design')).toBeDisabled();
     await user.click(screen.getByText('An EU region, spread across three zones'));
     await user.click(screen.getByText('Warm standby in a second EU region'));
@@ -93,7 +96,7 @@ describe('LabPage — architecture challenge', () => {
 
   it('flags a residency violation', async () => {
     const user = userEvent.setup();
-    renderLab('/cloud-fundamentals/global-infrastructure/geographic-redundancy-and-data-residency/labs/choose-a-deployment-geography');
+    await renderLab('/cloud-fundamentals/global-infrastructure/geographic-redundancy-and-data-residency/labs/choose-a-deployment-geography');
     await user.click(screen.getByText('An EU region, spread across three zones'));
     await user.click(screen.getByText('Warm standby in a non-EU region'));
     await user.click(screen.getByText('Asynchronous replication'));
@@ -108,7 +111,7 @@ describe('LabPage — replication and durability simulation', () => {
 
   it('reports local redundancy as unreadable through a zone failure and fails validation', async () => {
     const user = userEvent.setup();
-    renderLab(path);
+    await renderLab(path);
     await user.selectOptions(screen.getByLabelText('Failure to simulate'), 'zone');
     await user.click(screen.getByLabelText('Jump to last state'));
     expect(screen.getByText(/Only if the outage is temporary/)).toBeInTheDocument();
@@ -117,7 +120,7 @@ describe('LabPage — replication and durability simulation', () => {
 
   it('passes validation with zone-redundant storage under a zone failure', async () => {
     const user = userEvent.setup();
-    renderLab(path);
+    await renderLab(path);
     await user.selectOptions(screen.getByLabelText('Redundancy strategy'), 'zone');
     await user.selectOptions(screen.getByLabelText('Failure to simulate'), 'zone');
     await user.click(screen.getByLabelText('Jump to last state'));
@@ -128,7 +131,7 @@ describe('LabPage — replication and durability simulation', () => {
 
   it('marks geo-zone storage as over-provisioned for this requirement', async () => {
     const user = userEvent.setup();
-    renderLab(path);
+    await renderLab(path);
     await user.selectOptions(screen.getByLabelText('Redundancy strategy'), 'geo-zone');
     await user.selectOptions(screen.getByLabelText('Failure to simulate'), 'zone');
     await user.click(screen.getByLabelText('Jump to last state'));
@@ -140,7 +143,7 @@ describe('LabPage — replication and durability simulation', () => {
 describe('LabPage — storage selection challenge', () => {
   it('assesses the optimal storage design', async () => {
     const user = userEvent.setup();
-    renderLab('/cloud-fundamentals/storage/file-storage/labs/storage-selection-challenge');
+    await renderLab('/cloud-fundamentals/storage/file-storage/labs/storage-selection-challenge');
     const fieldsets = screen.getAllByRole('group');
     const pick = async (index: number, label: RegExp) => {
       const option = Array.from(fieldsets[index]!.querySelectorAll('label')).find((l) => label.test(l.textContent ?? ''));
@@ -160,7 +163,7 @@ describe('LabPage — CIDR and subnet lab', () => {
 
   it('calculates the range for a typed block and passes validation', async () => {
     const user = userEvent.setup();
-    renderLab(path);
+    await renderLab(path);
     const input = screen.getByLabelText('CIDR block');
     await user.clear(input);
     await user.type(input, '192.168.10.0/26');
@@ -173,7 +176,7 @@ describe('LabPage — CIDR and subnet lab', () => {
 
   it('explains invalid input and fails validation', async () => {
     const user = userEvent.setup();
-    renderLab(path);
+    await renderLab(path);
     const input = screen.getByLabelText('CIDR block');
     await user.clear(input);
     await user.type(input, '10.0.0.256/24');
@@ -188,7 +191,7 @@ describe('LabPage — packet routing lab', () => {
 
   it('starts with a dropped packet and passes once the NAT route is added', async () => {
     const user = userEvent.setup();
-    renderLab(path);
+    await renderLab(path);
     await user.click(screen.getByLabelText('Jump to last state'));
     expect(screen.getByText(/dropped — no path/)).toBeInTheDocument();
     expect(ruleMark('The app VM’s outbound packet was delivered')).toBe('○');
@@ -202,8 +205,8 @@ describe('LabPage — packet routing lab', () => {
 });
 
 describe('LabPage — DNS hands-on lab', () => {
-  it('presents local commands with the honesty note and no claim of verification', () => {
-    renderLab('/cloud-fundamentals/networking/dns-and-content-delivery/labs/trace-dns-resolution-locally');
+  it('presents local commands with the honesty note and no claim of verification', async () => {
+    await renderLab('/cloud-fundamentals/networking/dns-and-content-delivery/labs/trace-dns-resolution-locally');
     expect(screen.getByText('hands-on lab')).toBeInTheDocument();
     expect(screen.getByText('$ dig +trace www.example.com')).toBeInTheDocument();
     expect(screen.getByText(/Self-reported — not automatically verified/)).toBeInTheDocument();
@@ -211,8 +214,8 @@ describe('LabPage — DNS hands-on lab', () => {
 });
 
 describe('LabPage — not found', () => {
-  it('shows not found for an unknown lab id', () => {
-    renderLab('/cloud-fundamentals/compute/virtual-machines/labs/nonexistent');
+  it('shows not found for an unknown lab id', async () => {
+    await renderLab('/cloud-fundamentals/compute/virtual-machines/labs/nonexistent');
     expect(screen.getByText('Page Not Found')).toBeInTheDocument();
   });
 });

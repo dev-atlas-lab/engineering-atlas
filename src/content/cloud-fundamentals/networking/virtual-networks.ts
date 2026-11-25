@@ -1,11 +1,10 @@
-import type { ConceptMeta, LabDefinition, Lesson } from '../../types';
-import { vnetExplorerScene } from './scenes';
+import type { ConceptContentModule, LabBody, LessonBody } from '../../types';
+import { vnetExplorerScene } from './virtual-networks.scenes';
 import { cidrSubnetSimulation, type CidrLabState } from './cidr-simulation';
+import { renderCidrState } from './cidr-view';
+import { bindSimulation } from '../../../engines/lab/bind-simulation';
 
-const ipAddressing: Lesson = {
-  id: 'ip-addressing-and-cidr',
-  title: 'IP Addressing and CIDR Notation',
-  kind: 'concept',
+const ipAddressing: LessonBody = {
   learningObjectives: [
     'Read an IPv4 address and a CIDR block and compute its range by hand',
     'Distinguish public addresses from private (RFC 1918) addresses',
@@ -80,10 +79,7 @@ const ipAddressing: Lesson = {
   ],
 };
 
-const subnetPlanning: Lesson = {
-  id: 'cidr-and-subnet-planning',
-  title: 'Subnets and Address Planning',
-  kind: 'concept',
+const subnetPlanning: LessonBody = {
   learningObjectives: [
     'Divide an address space into subnets and calculate usable cloud addresses',
     'Plan address ranges that will not overlap with networks you may connect later',
@@ -159,10 +155,7 @@ const subnetPlanning: Lesson = {
   ],
 };
 
-const vnetArchitecture: Lesson = {
-  id: 'virtual-network-architecture',
-  title: 'Virtual Network Architecture',
-  kind: 'concept',
+const vnetArchitecture: LessonBody = {
   learningObjectives: [
     'Describe the components of a virtual network and how they relate',
     'Explain segmentation with subnets, route tables, and security rules',
@@ -219,10 +212,7 @@ const vnetArchitecture: Lesson = {
   ],
 };
 
-const securityRules: Lesson = {
-  id: 'network-security-rules',
-  title: 'Network Security Rules and Firewalls',
-  kind: 'concept',
+const securityRules: LessonBody = {
   learningObjectives: [
     'Distinguish stateful from stateless packet filtering',
     'Explain how rule evaluation decides whether a packet is allowed',
@@ -278,11 +268,7 @@ const securityRules: Lesson = {
   ],
 };
 
-const azureVnet: Lesson = {
-  id: 'azure-virtual-network',
-  title: 'Azure Virtual Network',
-  kind: 'provider',
-  providerId: 'azure',
+const azureVnet: LessonBody = {
   learningObjectives: ['Map Azure Virtual Network, subnets, and network security groups onto the general model'],
   sections: [
     {
@@ -318,11 +304,7 @@ const azureVnet: Lesson = {
   },
 };
 
-const awsVpc: Lesson = {
-  id: 'aws-vpc',
-  title: 'AWS VPC',
-  kind: 'provider',
-  providerId: 'aws',
+const awsVpc: LessonBody = {
   learningObjectives: ['Map Amazon VPC, subnets, security groups, and network ACLs onto the general model'],
   sections: [
     {
@@ -358,10 +340,7 @@ const awsVpc: Lesson = {
   },
 };
 
-const vnetComparison: Lesson = {
-  id: 'virtual-network-comparison',
-  title: 'Comparison: Azure VNet vs. AWS VPC',
-  kind: 'comparison',
+const vnetComparison: LessonBody = {
   learningObjectives: ['Compare Azure and AWS network filtering without treating NSGs and security groups as identical'],
   sections: [
     {
@@ -403,10 +382,7 @@ const vnetComparison: Lesson = {
   ],
 };
 
-const cidrLab: LabDefinition = {
-  id: 'cidr-and-subnet-lab',
-  title: 'CIDR and Subnet Lab',
-  type: 'simulation',
+const cidrLab: LabBody = {
   difficulty: 'beginner',
   estimatedTime: '20 minutes',
   description:
@@ -457,20 +433,20 @@ const cidrLab: LabDefinition = {
   },
 };
 
-export const virtualNetworks: ConceptMeta = {
-  id: 'virtual-networks',
-  title: 'Virtual Networks',
-  description:
-    'Isolated network environments in the cloud where you define address spaces (CIDR), connectivity, and network security groups.',
-  status: 'available',
-  learningObjectives: [
-    'Compute CIDR ranges and plan non-overlapping address spaces and subnets',
-    'Describe the components of a virtual network and how subnets, routes, and rules segment it',
-    'Explain stateful and stateless filtering and compare Azure NSGs with AWS security groups and network ACLs',
-  ],
-  prerequisites: ['regions-and-availability-zones'],
-  relatedConcepts: ['subnets-and-routing', 'connecting-networks', 'network-security', 'virtual-machines'],
-  estimatedMinutes: 85,
-  lessons: [ipAddressing, subnetPlanning, vnetArchitecture, securityRules, azureVnet, awsVpc, vnetComparison],
-  labs: [cidrLab],
+export const content: ConceptContentModule = {
+  lessons: {
+    'ip-addressing-and-cidr': ipAddressing,
+    'cidr-and-subnet-planning': subnetPlanning,
+    'virtual-network-architecture': vnetArchitecture,
+    'network-security-rules': securityRules,
+    'azure-virtual-network': azureVnet,
+    'aws-vpc': awsVpc,
+    'virtual-network-comparison': vnetComparison,
+  },
+  labs: {
+    'cidr-and-subnet-lab': cidrLab,
+  },
+  simulations: {
+    'cidr-and-subnet-lab': bindSimulation(cidrSubnetSimulation, renderCidrState),
+  },
 };

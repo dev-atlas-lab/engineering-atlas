@@ -1,7 +1,5 @@
 import type { Category } from '../../types';
-import { blockStorage } from './block-storage';
-import { objectStorage } from './object-storage';
-import { fileStorage } from './file-storage';
+import { blockStorage, objectStorage, fileStorage } from './meta';
 
 export const storage: Category = {
   id: 'storage',

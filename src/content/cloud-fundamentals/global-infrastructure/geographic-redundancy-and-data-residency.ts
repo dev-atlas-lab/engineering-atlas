@@ -1,10 +1,7 @@
-import type { ConceptMeta, LabDefinition, Lesson } from '../../types';
-import { multiRegionScene } from './scenes';
+import type { ConceptContentModule, LabBody, LessonBody } from '../../types';
+import { multiRegionScene } from './geographic-redundancy-and-data-residency.scenes';
 
-const whyGeographyMatters: Lesson = {
-  id: 'why-geography-matters',
-  title: 'Why Spread Across Regions',
-  kind: 'concept',
+const whyGeographyMatters: LessonBody = {
   learningObjectives: [
     'Explain which failures zone redundancy cannot protect against',
     'Relate recovery point objective (RPO) and recovery time objective (RTO) to multi-region design',
@@ -60,10 +57,7 @@ const whyGeographyMatters: Lesson = {
   ],
 };
 
-const multiRegionReplication: Lesson = {
-  id: 'multi-region-replication',
-  title: 'Multi-Region Replication and Failover',
-  kind: 'concept',
+const multiRegionReplication: LessonBody = {
   learningObjectives: [
     'Explain why cross-region replication is usually asynchronous',
     'Describe what is lost and what takes time during a regional failover',
@@ -122,10 +116,7 @@ const multiRegionReplication: Lesson = {
   ],
 };
 
-const dataResidency: Lesson = {
-  id: 'data-residency-and-sovereignty',
-  title: 'Data Residency and Sovereignty',
-  kind: 'concept',
+const dataResidency: LessonBody = {
   learningObjectives: [
     'Distinguish data residency from data sovereignty',
     'Identify where replication and global services can move data outside a chosen region',
@@ -183,10 +174,7 @@ const dataResidency: Lesson = {
   ],
 };
 
-const geographyComparison: Lesson = {
-  id: 'geography-comparison',
-  title: 'Comparison: Azure Region Pairs vs. AWS Region Choice',
-  kind: 'comparison',
+const geographyComparison: LessonBody = {
   learningObjectives: ['Compare how Azure and AWS approach the choice of a secondary region'],
   sections: [
     {
@@ -214,10 +202,7 @@ const geographyComparison: Lesson = {
   ],
 };
 
-const geographyChallenge: LabDefinition = {
-  id: 'choose-a-deployment-geography',
-  title: 'Choose a Deployment Geography',
-  type: 'challenge',
+const geographyChallenge: LabBody = {
   difficulty: 'intermediate',
   estimatedTime: '10 minutes',
   description: 'Choose regions, a recovery pattern, and a replication mode for a regulated application, then compare your design against assessed alternatives.',
@@ -322,20 +307,15 @@ const geographyChallenge: LabDefinition = {
   },
 };
 
-export const geographicRedundancyAndDataResidency: ConceptMeta = {
-  id: 'geographic-redundancy-and-data-residency',
-  title: 'Geographic Redundancy and Data Residency',
-  description:
-    'Replicating data and workloads across geography for resilience, balanced against data residency and sovereignty requirements that constrain where data may legally live.',
-  status: 'available',
-  learningObjectives: [
-    'Explain which failures require a second region and how RPO and RTO shape the design',
-    'Describe asynchronous cross-region replication and what failover involves',
-    'Identify how replication and global services can move data across jurisdictions',
-  ],
-  prerequisites: ['regions-and-availability-zones'],
-  relatedConcepts: ['regions-and-availability-zones', 'disaster-recovery', 'object-storage'],
-  estimatedMinutes: 50,
-  lessons: [whyGeographyMatters, multiRegionReplication, dataResidency, geographyComparison],
-  labs: [geographyChallenge],
+export const content: ConceptContentModule = {
+  lessons: {
+    'why-geography-matters': whyGeographyMatters,
+    'multi-region-replication': multiRegionReplication,
+    'data-residency-and-sovereignty': dataResidency,
+    'geography-comparison': geographyComparison,
+  },
+  labs: {
+    'choose-a-deployment-geography': geographyChallenge,
+  },
+  simulations: {},
 };

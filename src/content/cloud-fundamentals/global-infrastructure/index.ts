@@ -1,7 +1,5 @@
 import type { Category } from '../../types';
-import { regionsAndAvailabilityZones } from './regions-and-availability-zones';
-import { dataCentersAndEdgeLocations } from './data-centers-and-edge-locations';
-import { geographicRedundancyAndDataResidency } from './geographic-redundancy-and-data-residency';
+import { regionsAndAvailabilityZones, dataCentersAndEdgeLocations, geographicRedundancyAndDataResidency } from './meta';
 
 export const globalInfrastructure: Category = {
   id: 'global-infrastructure',

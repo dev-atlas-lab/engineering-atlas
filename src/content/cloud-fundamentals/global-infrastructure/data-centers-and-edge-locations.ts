@@ -1,10 +1,7 @@
-import type { ConceptMeta, Lesson } from '../../types';
-import { edgeCacheScene, infrastructureHierarchyScene } from './scenes';
+import type { ConceptContentModule, LessonBody } from '../../types';
+import { edgeCacheScene, infrastructureHierarchyScene } from './data-centers-and-edge-locations.scenes';
 
-const insideADatacenter: Lesson = {
-  id: 'inside-a-cloud-datacenter',
-  title: 'Inside a Cloud Datacenter',
-  kind: 'concept',
+const insideADatacenter: LessonBody = {
   learningObjectives: [
     'Describe the physical hierarchy from geography down to rack',
     'Explain why datacenters are designed around redundant power, cooling, and networking',
@@ -70,10 +67,7 @@ const insideADatacenter: Lesson = {
   ],
 };
 
-const edgeLocations: Lesson = {
-  id: 'edge-locations-and-points-of-presence',
-  title: 'Edge Locations and Points of Presence',
-  kind: 'concept',
+const edgeLocations: LessonBody = {
   learningObjectives: [
     'Distinguish edge locations from regions',
     'Trace a cache miss and a cache hit through an edge location',
@@ -155,10 +149,7 @@ const edgeLocations: Lesson = {
   ],
 };
 
-const edgeComparison: Lesson = {
-  id: 'edge-networks-comparison',
-  title: 'Comparison: Azure and AWS Edge Networks',
-  kind: 'comparison',
+const edgeComparison: LessonBody = {
   learningObjectives: ['Map the edge concepts to the Azure and AWS services that use them'],
   sections: [
     {
@@ -191,19 +182,12 @@ const edgeComparison: Lesson = {
   ],
 };
 
-export const dataCentersAndEdgeLocations: ConceptMeta = {
-  id: 'data-centers-and-edge-locations',
-  title: 'Data Centers and Edge Locations',
-  description:
-    'Physical data center design and the edge points of presence that cache content and route traffic close to users.',
-  status: 'available',
-  learningObjectives: [
-    'Describe the physical hierarchy behind a cloud region and its failure boundaries',
-    'Distinguish edge locations from regions and from infrastructure extensions',
-    'Trace how an edge cache serves a miss and a hit',
-  ],
-  prerequisites: ['regions-and-availability-zones'],
-  relatedConcepts: ['regions-and-availability-zones', 'dns-and-content-delivery', 'global-traffic-distribution'],
-  estimatedMinutes: 40,
-  lessons: [insideADatacenter, edgeLocations, edgeComparison],
+export const content: ConceptContentModule = {
+  lessons: {
+    'inside-a-cloud-datacenter': insideADatacenter,
+    'edge-locations-and-points-of-presence': edgeLocations,
+    'edge-networks-comparison': edgeComparison,
+  },
+  labs: {},
+  simulations: {},
 };
