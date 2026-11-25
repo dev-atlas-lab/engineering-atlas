@@ -305,3 +305,18 @@ All new content follows per-concept loading. Each IAM and Security concept is it
 | Lab (CIDR) | 136.4 KB | 139.3 KB |
 
 Browser checks confirmed that Home and the IAM and Security category pages download no concept chunks, and that IAM and Security concept, lesson, and lab pages download only their own concept's chunk.
+
+### Visualization phase (SVG-first)
+
+Making declarative SVG the default scene renderer and lazy-loading React Flow (ADR-008) moved `@xyflow/react` (242 KB raw / 82 KB gzip) and its 16 KB stylesheet off the eager lesson path into a chunk no current route fetches. The lesson page's own chunk fell from 258 KB raw (87 KB gzip) to 31 KB raw (9.7 KB gzip). Measured gzip JavaScript per page, cold cache, production build:
+
+| Page | Slice 2B | SVG-first |
+|---|---|---|
+| Home | 120.5 KB | 120.5 KB |
+| Category (IAM) | 121.0 KB | 121.0 KB |
+| Lesson (Virtual Networks) | 225.0 KB | 146.5 KB |
+| Lesson (Azure RBAC) | 236.0 KB | 157.6 KB |
+| Lab (CIDR) | 139.3 KB | 139.3 KB |
+| Lab (IAM Policy Evaluation Simulator) | 150.3 KB | 150.3 KB |
+
+Every lesson page drops about 78 KB gzip (~35%); discovery and lab pages are unchanged, because they never rendered a topology scene. A browser run confirmed that opening any scene lesson renders an SVG diagram and never fetches the React Flow chunk.

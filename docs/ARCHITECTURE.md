@@ -89,30 +89,29 @@ The primary content area where a learner studies a concept.
 Renders interactive technical diagrams and architecture views.
 
 **Responsibilities:**
-- Accept a scene definition (nodes, edges, annotations, state).
-- Render using the appropriate technology (React Flow, SVG/D3, or custom).
-- Support component inspection (click to see details).
-- Support state transitions (animate between states).
-- Support timeline control (play, pause, step, scrub).
-- Provide reusable visual primitives (server, database, network, queue, etc.).
+- Accept a scene definition (nodes, edges, boundaries, state).
+- Render as declarative SVG by default (ADR-008); React Flow only for a scene that opts into graph interaction.
+- Support component inspection (select a node to see its details and connections).
+- Support state transitions and timeline control (step, scrub), keeping the diagram in sync with the step.
+- Provide reusable SVG primitives and one visual language (node kinds, edge flow, boundaries, status) shared by every diagram.
 
 **Architecture:**
 
 ```
-Scene Definition (data)
+Scene Definition (data: nodes, edges, states, boundaries, interaction?)
   │
   ├── SceneRenderer (picks rendering strategy)
-  │     ├── ReactFlowScene (node-based graphs)
-  │     ├── SVGScene (custom diagrams, D3)
-  │     └── SequenceScene (protocol sequences)
+  │     ├── SvgTopologyScene (default, SVG)
+  │     ├── SvgSequenceScene (default, SVG)
+  │     └── ReactFlowScene (lazy, only interaction: 'graph')
+  │         └── shared: svg-tokens, svg-layout, svg-primitives, svg-legend
   │
-  ├── ComponentInspector (detail panel)
+  ├── ComponentInspector (details + connections)
   │
-  └── TimelineController (step/play/scrub)
-        └── StateManager (tracks scene states)
+  └── TimelineController (step/scrub)
 ```
 
-See [VISUALIZATION_ENGINE.md](VISUALIZATION_ENGINE.md) for full specification.
+SVG is the default so that scenes are scalable, themeable, accessible, and light; React Flow is lazy-loaded and kept out of the eager lesson chunk. See [SVG_VISUALIZATION_STANDARD.md](SVG_VISUALIZATION_STANDARD.md) and [VISUALIZATION_ENGINE.md](VISUALIZATION_ENGINE.md) for the full specification, and ADR-008 for the decision.
 
 ### 5. Simulation Engine
 
