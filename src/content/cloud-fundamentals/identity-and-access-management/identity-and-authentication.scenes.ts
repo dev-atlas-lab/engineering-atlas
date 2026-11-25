@@ -40,9 +40,9 @@ export const accessLifecycleScene: SceneDefinition = {
     { id: 'l2', source: 'idp', target: 'user', label: 'signed access token (expires)' },
     { id: 'l3', source: 'user', target: 'api', label: 'restart vm-prod-01 + token' },
     { id: 'l4', source: 'api', target: 'authz', label: 'principal, action, resource?' },
-    { id: 'l5', source: 'authz', target: 'api', label: 'deny: no permission at this scope' },
+    { id: 'l5', source: 'authz', target: 'api', label: 'deny: no permission at this scope', flow: 'deny' },
     { id: 'l6', source: 'api', target: 'log', label: 'record request and decision' },
-    { id: 'l7', source: 'api', target: 'user', label: '403 Forbidden' },
+    { id: 'l7', source: 'api', target: 'user', label: '403 Forbidden', flow: 'deny' },
   ],
   states: [
     {
@@ -173,4 +173,5 @@ export const oidcSsoScene: SceneDefinition = {
         'The app sets its own session cookie. Disabling the user at the identity provider stops new sign-ins everywhere at once — although sessions and tokens already issued stay valid until they expire or are revoked.',
     },
   ],
+  boundaries: [{ id: 'idp-trust', label: 'Trusted identity provider', kind: 'trust', nodeIds: ['idp'] }],
 };

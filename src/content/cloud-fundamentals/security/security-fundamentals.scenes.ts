@@ -51,7 +51,7 @@ export const defenseInDepthScene: SceneDefinition = {
       description:
         'From the web tier, the attacker tries the database directly. The database accepts connections only from the app subnet, so the attempt is denied. The web tier’s managed identity can read one storage container and nothing else, and there are no keys on disk to steal.',
       nodeOverrides: { web: { status: 'error', label: 'Web tier · compromised' }, db: { data: { 'From the web tier': 'Denied — not the app subnet' } } },
-      edgeOverrides: { 'w-d': { animated: true, label: 'denied: segmentation' } },
+      edgeOverrides: { 'w-d': { flow: 'deny', label: 'denied: segmentation' } },
     },
     {
       id: 'detect',

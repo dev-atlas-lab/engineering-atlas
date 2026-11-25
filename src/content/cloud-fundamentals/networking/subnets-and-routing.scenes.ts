@@ -33,10 +33,11 @@ export const publicPrivateScene: SceneDefinition = {
   ],
   edges: [
     { id: 'in-public', source: 'internet', target: 'publicVm', edgeType: 'request', label: 'HTTPS' },
-    { id: 'in-private', source: 'internet', target: 'privateVm', edgeType: 'request', label: 'no route' },
+    { id: 'in-private', source: 'internet', target: 'privateVm', edgeType: 'request', label: 'no route', flow: 'blocked' },
     { id: 'public-private', source: 'publicVm', target: 'privateVm', edgeType: 'request' },
     { id: 'private-nat', source: 'privateVm', target: 'nat', edgeType: 'request', label: 'outbound' },
   ],
+  boundaries: [{ id: 'vnet', label: 'Virtual network', kind: 'network', nodeIds: ['publicVm', 'privateVm', 'nat'] }],
   states: [
     {
       id: 'public',
@@ -67,7 +68,7 @@ export const publicPrivateScene: SceneDefinition = {
         'The fix is defence in depth: the database accepts only its port, only from the application subnet; the web tier gets no direct database access; outbound internet access goes through the NAT gateway rather than a public IP. Now a compromised web VM still cannot reach the database directly.',
       nodeOverrides: { publicVm: { status: 'error', label: 'Web VM · compromised' } },
       edgeOverrides: {
-        'public-private': { label: 'denied: rule allows app subnet only' },
+        'public-private': { flow: 'deny', label: 'denied: rule allows app subnet only' },
         'private-nat': { animated: true },
       },
     },
