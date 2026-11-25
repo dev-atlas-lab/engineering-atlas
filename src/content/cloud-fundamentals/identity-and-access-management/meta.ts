@@ -66,5 +66,24 @@ export const workloadAndFederatedIdentity: ConceptMeta = {
   title: 'Workload and Federated Identity',
   description:
     'Managed identities, service principals, and workload identity for non-human principals, plus federation and temporary credentials for cross-boundary access.',
-  status: 'coming-soon',
+  status: 'available',
+  learningObjectives: [
+    'Explain why long-lived keys in application configuration are dangerous and how secretless authentication removes them',
+    'Trace how a workload obtains, uses, and refreshes temporary credentials',
+    'Configure workload identity federation narrowly enough that only the intended workload can use it',
+    'Compare Azure managed identities with AWS IAM roles for workloads',
+  ],
+  prerequisites: ['identity-and-authentication', 'authorization-and-policies'],
+  relatedConcepts: ['authorization-and-policies', 'encryption-and-key-management', 'virtual-machines', 'containers'],
+  estimatedMinutes: 85,
+  lessons: [
+    { id: 'workload-identity-fundamentals', title: 'Workload Identity: How Software Authenticates', kind: 'concept' },
+    { id: 'temporary-credentials-and-federation', title: 'Temporary Credentials and Workload Identity Federation', kind: 'concept' },
+    { id: 'azure-managed-identities', title: 'Azure Managed Identities and Service Principals', kind: 'provider', providerId: 'azure' },
+    { id: 'aws-iam-roles-for-workloads', title: 'AWS IAM Roles for Workloads and STS', kind: 'provider', providerId: 'aws' },
+    { id: 'workload-identity-comparison', title: 'Comparison: Managed Identities vs. IAM Roles for Workloads', kind: 'comparison' },
+  ],
+  labs: [
+    { id: 'workload-credential-lab', title: 'Workload Credential Lifecycle', type: 'simulation' },
+  ],
 };
