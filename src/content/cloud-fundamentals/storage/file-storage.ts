@@ -1,9 +1,6 @@
-import type { ConceptMeta, LabDefinition, Lesson } from '../../types';
+import type { ConceptContentModule, LabBody, LessonBody } from '../../types';
 
-const howFileStorageWorks: Lesson = {
-  id: 'how-file-storage-works',
-  title: 'How Managed File Storage Works',
-  kind: 'concept',
+const howFileStorageWorks: LessonBody = {
   learningObjectives: [
     'Explain how NFS and SMB provide shared filesystem access over a network',
     'Describe the consistency, locking, and performance trade-offs of shared file storage',
@@ -64,10 +61,7 @@ const howFileStorageWorks: Lesson = {
   ],
 };
 
-const choosingStorage: Lesson = {
-  id: 'choosing-a-storage-model',
-  title: 'Choosing a Storage Model',
-  kind: 'concept',
+const choosingStorage: LessonBody = {
   learningObjectives: ['Select block, file, or object storage from a workload’s access pattern, sharing needs, and cost profile'],
   sections: [
     {
@@ -96,11 +90,7 @@ const choosingStorage: Lesson = {
   ],
 };
 
-const azureFiles: Lesson = {
-  id: 'azure-files',
-  title: 'Azure Files',
-  kind: 'provider',
-  providerId: 'azure',
+const azureFiles: LessonBody = {
   learningObjectives: ['Map Azure Files onto the managed file storage model'],
   sections: [
     {
@@ -135,11 +125,7 @@ const azureFiles: Lesson = {
   },
 };
 
-const amazonEfs: Lesson = {
-  id: 'amazon-efs-and-fsx',
-  title: 'Amazon EFS and Amazon FSx',
-  kind: 'provider',
-  providerId: 'aws',
+const amazonEfs: LessonBody = {
   learningObjectives: ['Map Amazon EFS and the FSx family onto the managed file storage model'],
   sections: [
     {
@@ -175,10 +161,7 @@ const amazonEfs: Lesson = {
   },
 };
 
-const fileComparison: Lesson = {
-  id: 'file-storage-comparison',
-  title: 'Comparison: Azure Files vs. Amazon EFS',
-  kind: 'comparison',
+const fileComparison: LessonBody = {
   learningObjectives: ['Compare Azure Files and Amazon EFS, including where the mapping is only partial'],
   sections: [
     {
@@ -218,10 +201,7 @@ const fileComparison: Lesson = {
   ],
 };
 
-const storageSelectionChallenge: LabDefinition = {
-  id: 'storage-selection-challenge',
-  title: 'Storage Selection Challenge',
-  type: 'challenge',
+const storageSelectionChallenge: LabBody = {
   difficulty: 'beginner',
   estimatedTime: '10 minutes',
   description: 'Choose the storage model for four workloads in one system, then compare your choices with an assessed design.',
@@ -335,20 +315,16 @@ const storageSelectionChallenge: LabDefinition = {
   },
 };
 
-export const fileStorage: ConceptMeta = {
-  id: 'file-storage',
-  title: 'File Storage',
-  description:
-    'Managed file systems accessible over standard protocols like NFS and SMB, including backup and recovery patterns.',
-  status: 'available',
-  learningObjectives: [
-    'Explain how managed file shares provide shared access over NFS and SMB',
-    'Choose between block, file, and object storage for a workload',
-    'Compare Azure Files with Amazon EFS and FSx, including where the mapping is only partial',
-  ],
-  prerequisites: ['block-storage'],
-  relatedConcepts: ['block-storage', 'object-storage', 'virtual-networks'],
-  estimatedMinutes: 45,
-  lessons: [howFileStorageWorks, choosingStorage, azureFiles, amazonEfs, fileComparison],
-  labs: [storageSelectionChallenge],
+export const content: ConceptContentModule = {
+  lessons: {
+    'how-file-storage-works': howFileStorageWorks,
+    'choosing-a-storage-model': choosingStorage,
+    'azure-files': azureFiles,
+    'amazon-efs-and-fsx': amazonEfs,
+    'file-storage-comparison': fileComparison,
+  },
+  labs: {
+    'storage-selection-challenge': storageSelectionChallenge,
+  },
+  simulations: {},
 };

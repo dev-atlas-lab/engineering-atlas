@@ -1,11 +1,10 @@
-import type { ConceptMeta, LabDefinition, Lesson } from '../../types';
-import { objectRequestFlowScene } from './scenes';
+import type { ConceptContentModule, LabBody, LessonBody } from '../../types';
+import { objectRequestFlowScene } from './object-storage.scenes';
 import { replicationSimulation, type ReplicationState } from './simulations';
+import { renderReplicationState } from './replication-view';
+import { bindSimulation } from '../../../engines/lab/bind-simulation';
 
-const howObjectStorageWorks: Lesson = {
-  id: 'how-object-storage-works',
-  title: 'How Object Storage Works',
-  kind: 'concept',
+const howObjectStorageWorks: LessonBody = {
   learningObjectives: [
     'Describe the object storage namespace: account or bucket, keys, and metadata',
     'Trace an upload and a download through authorization, the namespace, and the data layer',
@@ -69,10 +68,7 @@ const howObjectStorageWorks: Lesson = {
   ],
 };
 
-const durabilityAndReplication: Lesson = {
-  id: 'durability-availability-and-replication',
-  title: 'Durability, Availability, and Replication',
-  kind: 'concept',
+const durabilityAndReplication: LessonBody = {
   learningObjectives: [
     'Distinguish durability from availability',
     'Predict which failures each redundancy strategy tolerates',
@@ -131,10 +127,7 @@ const durabilityAndReplication: Lesson = {
   ],
 };
 
-const tiersAndLifecycle: Lesson = {
-  id: 'access-tiers-and-lifecycle',
-  title: 'Access Tiers and Lifecycle Management',
-  kind: 'concept',
+const tiersAndLifecycle: LessonBody = {
   learningObjectives: [
     'Explain the trade-off between storage cost and access cost across tiers',
     'Design a lifecycle policy for data whose access pattern changes over time',
@@ -195,10 +188,7 @@ const tiersAndLifecycle: Lesson = {
   ],
 };
 
-const securingObjectStorage: Lesson = {
-  id: 'securing-object-storage',
-  title: 'Securing Object Storage',
-  kind: 'concept',
+const securingObjectStorage: LessonBody = {
   learningObjectives: [
     'Explain encryption at rest and in transit for object storage',
     'Identify how object storage accidentally becomes public, and how to prevent it',
@@ -255,11 +245,7 @@ const securingObjectStorage: Lesson = {
   ],
 };
 
-const azureBlob: Lesson = {
-  id: 'azure-blob-storage',
-  title: 'Azure Blob Storage',
-  kind: 'provider',
-  providerId: 'azure',
+const azureBlob: LessonBody = {
   learningObjectives: ['Map Azure Blob Storage onto the object storage model'],
   sections: [
     {
@@ -296,11 +282,7 @@ const azureBlob: Lesson = {
   },
 };
 
-const amazonS3: Lesson = {
-  id: 'amazon-s3',
-  title: 'Amazon S3',
-  kind: 'provider',
-  providerId: 'aws',
+const amazonS3: LessonBody = {
   learningObjectives: ['Map Amazon S3 onto the object storage model'],
   sections: [
     {
@@ -337,10 +319,7 @@ const amazonS3: Lesson = {
   },
 };
 
-const objectComparison: Lesson = {
-  id: 'object-storage-comparison',
-  title: 'Comparison: Azure Blob Storage vs. Amazon S3',
-  kind: 'comparison',
+const objectComparison: LessonBody = {
   learningObjectives: ['Compare where Azure Blob Storage and Amazon S3 put redundancy and namespace decisions'],
   sections: [
     {
@@ -380,10 +359,7 @@ const objectComparison: Lesson = {
   ],
 };
 
-const replicationLab: LabDefinition = {
-  id: 'replication-and-durability-lab',
-  title: 'Replication and Durability',
-  type: 'simulation',
+const replicationLab: LabBody = {
   difficulty: 'intermediate',
   estimatedTime: '15 minutes',
   description:
@@ -427,21 +403,20 @@ const replicationLab: LabDefinition = {
   },
 };
 
-export const objectStorage: ConceptMeta = {
-  id: 'object-storage',
-  title: 'Object Storage',
-  description:
-    'Scalable storage for unstructured data accessed via HTTP APIs, organized in buckets, with tiered durability, availability, and lifecycle policies.',
-  status: 'available',
-  learningObjectives: [
-    'Describe the object namespace and trace requests through authorization and storage',
-    'Distinguish durability from availability and choose a redundancy strategy',
-    'Use access tiers and lifecycle policies to match cost to access patterns',
-    'Secure object storage and compare Azure Blob Storage with Amazon S3',
-  ],
-  prerequisites: ['block-storage'],
-  relatedConcepts: ['block-storage', 'file-storage', 'geographic-redundancy-and-data-residency', 'encryption-and-key-management'],
-  estimatedMinutes: 80,
-  lessons: [howObjectStorageWorks, durabilityAndReplication, tiersAndLifecycle, securingObjectStorage, azureBlob, amazonS3, objectComparison],
-  labs: [replicationLab],
+export const content: ConceptContentModule = {
+  lessons: {
+    'how-object-storage-works': howObjectStorageWorks,
+    'durability-availability-and-replication': durabilityAndReplication,
+    'access-tiers-and-lifecycle': tiersAndLifecycle,
+    'securing-object-storage': securingObjectStorage,
+    'azure-blob-storage': azureBlob,
+    'amazon-s3': amazonS3,
+    'object-storage-comparison': objectComparison,
+  },
+  labs: {
+    'replication-and-durability-lab': replicationLab,
+  },
+  simulations: {
+    'replication-and-durability-lab': bindSimulation(replicationSimulation, renderReplicationState),
+  },
 };

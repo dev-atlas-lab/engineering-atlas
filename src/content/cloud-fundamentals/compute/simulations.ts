@@ -19,7 +19,7 @@ export interface VmAllocationState {
 /**
  * Deterministic bin-packing simulation: VM requests are allocated in order
  * against a fixed host capacity (16 vCPU / 64 GB, matching
- * scenes.ts's vmArchitectureScene). A request is granted if the host has
+ * virtual-machines.scenes.ts's vmArchitectureScene). A request is granted if the host has
  * enough remaining capacity, otherwise it is rejected — same params always
  * produce the same sequence of grants and rejections.
  */

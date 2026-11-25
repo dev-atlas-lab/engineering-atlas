@@ -2,6 +2,7 @@
 // design this implements. Authoring format is structured TypeScript, not
 // MDX (see docs/decisions/ADR-005-frontend-dependency-strategy.md).
 
+import type { ReactNode } from 'react';
 import type { SceneDefinition } from '../engines/visualization/types';
 
 export type ConceptStatus = 'available' | 'in-development' | 'coming-soon';
@@ -68,11 +69,18 @@ export interface ProviderImplementationDetails {
 
 export type LessonKind = 'concept' | 'provider' | 'comparison';
 
-export interface Lesson {
+/** Eager metadata — enough for navigation, breadcrumbs, and prev/next.
+ *  This is the single authoritative source of a lesson's id, title, kind,
+ *  and (by array position) order. */
+export interface LessonMeta {
   id: string;
   title: string;
   kind: LessonKind;
   providerId?: ProviderId; // required when kind === 'provider'
+}
+
+/** Lazy body — loaded with the lesson's concept, keyed by lesson id. */
+export interface LessonBody {
   learningObjectives: string[];
   analogy?: string;
   sections: LessonSection[];
@@ -81,6 +89,8 @@ export interface Lesson {
   knowledgeCheck?: KnowledgeCheckQuestion[];
   furtherReading?: ReferenceLink[];
 }
+
+export type Lesson = LessonMeta & LessonBody;
 
 // --- Labs — verbatim from docs/LAB_ENGINE.md --------------------------
 
@@ -184,10 +194,15 @@ export interface ChallengeLab {
   solutions: ChallengeSolution[];
 }
 
-export interface LabDefinition {
+/** Eager metadata for a lab — the single source of its id, title, and type. */
+export interface LabMeta {
   id: string;
   title: string;
   type: LabType;
+}
+
+/** Lazy body — loaded with the lab's concept, keyed by lab id. */
+export interface LabBody {
   difficulty: LabDifficulty;
   estimatedTime: string;
   description: string;
@@ -196,8 +211,19 @@ export interface LabDefinition {
   content: SimulationLab | HandsOnLab | ChallengeLab;
 }
 
+export type LabDefinition = LabMeta & LabBody;
+
+/** A simulation lab's runtime binding: the live simulation plus the
+ *  lab-specific view of its state, owned by the concept that uses it. */
+export interface LabSimulationEntry {
+  simulationId: string;
+  render: (content: SimulationLab) => ReactNode;
+}
+
 // --- Content hierarchy --------------------------------------------------
 
+/** Eager concept metadata. Contains no lesson or lab bodies, so the whole
+ *  curriculum index stays small enough to load on every page. */
 export interface ConceptMeta {
   id: string;
   title: string;
@@ -207,8 +233,16 @@ export interface ConceptMeta {
   prerequisites?: string[]; // concept ids
   relatedConcepts?: string[]; // concept ids
   estimatedMinutes?: number;
-  lessons?: Lesson[];
-  labs?: LabDefinition[];
+  lessons?: LessonMeta[];
+  labs?: LabMeta[];
+}
+
+/** What a lazily loaded concept module exports. Keys must match the ids in
+ *  the concept's metadata exactly; the loader verifies this. */
+export interface ConceptContentModule {
+  lessons: Record<string, LessonBody>;
+  labs: Record<string, LabBody>;
+  simulations: Record<string, LabSimulationEntry>;
 }
 
 export interface Category {

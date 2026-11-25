@@ -125,7 +125,7 @@ Every simulation is a pure function of its parameters. The same input always pro
 
 ### Engine changes made for this slice
 
-- The simulation-lab registry (`lab-simulations.tsx`) now holds simulations with different state types.
+- The simulation-lab registry now holds simulations with different state types. (Since Slice 2A.1, each concept module binds its own simulations with `bindSimulation`; the central `lab-simulations.tsx` registry is gone.)
 - Simulations support a `text` parameter type, used by the CIDR lab.
 - React Flow nodes can be selected from the keyboard (Tab, then Enter or Space) and populate the inspector.
 - The current step's explanation is shown under the timeline.
@@ -189,4 +189,22 @@ Each provider lesson also links its primary documentation page.
 | `cloud-fundamentals` content chunk | 173 KB (55 KB gzip) | 397 KB (119 KB gzip) |
 | `lab` page chunk | 14 KB (4 KB gzip) | 26 KB (6 KB gzip) |
 
-The content chunk loads on every page, including Home, because every page reads the content index synchronously. With six categories still to author, it is on track to roughly double again. Splitting lesson bodies out of the index so they load per concept would fix this, but it changes content access from synchronous to asynchronous across pages and breadcrumbs. That is an architectural decision, so it is proposed for approval rather than made in this slice.
+In Slice 2A, that content chunk loaded on every page, including Home, because every page read the content index synchronously.
+
+**Resolved in Slice 2A.1** (`docs/decisions/ADR-007-per-concept-content-loading.md`):
+- Metadata stays eager.
+- Each concept's content is its own chunk, 12.8–32.6 KB raw (4.7–10.5 KB gzip), loaded only when one of its pages opens.
+
+Measured gzip JavaScript per page, cold cache, against a production build:
+
+| Page | Slice 2A | Slice 2A.1 |
+|---|---|---|
+| Home | 194.6 KB | 118.4 KB |
+| Domain | 194.6 KB | 118.4 KB |
+| Category | 195.0 KB | 118.8 KB |
+| Concept overview (Virtual Networks) | 197.0 KB | 135.3 KB |
+| Coming-soon concept | 197.0 KB | 122.0 KB |
+| Lesson (Virtual Networks) | 282.7 KB | 221.7 KB |
+| Lab (CIDR) | 201.0 KB | 136.4 KB |
+
+New categories now add only their metadata to the eager bundle. Today's metadata for all 34 concepts is about 23 KB raw. Their lesson content goes into new per-concept chunks. The lesson page's own chunk (258 KB raw, 87 KB gzip) is mostly React Flow and Motion for visualizations, and it is shared by every lesson.

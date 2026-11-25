@@ -1,10 +1,7 @@
-import type { ConceptMeta, LabDefinition, Lesson } from '../../types';
-import { hubSpokeScene } from './scenes';
+import type { ConceptContentModule, LabBody, LessonBody } from '../../types';
+import { hubSpokeScene } from './connecting-networks.scenes';
 
-const peeringAndTransitivity: Lesson = {
-  id: 'peering-and-transitivity',
-  title: 'Peering and Hub-and-Spoke Topologies',
-  kind: 'concept',
+const peeringAndTransitivity: LessonBody = {
   learningObjectives: [
     'Explain what network peering provides and why it is not transitive',
     'Describe how a hub-and-spoke topology provides transit and shared services',
@@ -50,10 +47,7 @@ const peeringAndTransitivity: Lesson = {
   ],
 };
 
-const hybridConnectivity: Lesson = {
-  id: 'hybrid-and-private-connectivity',
-  title: 'Hybrid and Private Connectivity',
-  kind: 'concept',
+const hybridConnectivity: LessonBody = {
   learningObjectives: [
     'Compare site-to-site VPN with dedicated private circuits',
     'Explain how private endpoints let managed services stop accepting internet traffic',
@@ -109,11 +103,7 @@ const hybridConnectivity: Lesson = {
   ],
 };
 
-const azureConnectivity: Lesson = {
-  id: 'azure-network-connectivity',
-  title: 'Azure Network Connectivity',
-  kind: 'provider',
-  providerId: 'azure',
+const azureConnectivity: LessonBody = {
   learningObjectives: ['Map Azure’s peering, gateway, and private connectivity services onto the general model'],
   sections: [
     {
@@ -151,11 +141,7 @@ const azureConnectivity: Lesson = {
   },
 };
 
-const awsConnectivity: Lesson = {
-  id: 'aws-network-connectivity',
-  title: 'AWS Network Connectivity',
-  kind: 'provider',
-  providerId: 'aws',
+const awsConnectivity: LessonBody = {
   learningObjectives: ['Map AWS’s peering, transit, VPN, and PrivateLink services onto the general model'],
   sections: [
     {
@@ -193,10 +179,7 @@ const awsConnectivity: Lesson = {
   },
 };
 
-const connectivityComparison: Lesson = {
-  id: 'connectivity-comparison',
-  title: 'Comparison: Azure vs. AWS Network Connectivity',
-  kind: 'comparison',
+const connectivityComparison: LessonBody = {
   learningObjectives: ['Compare the connectivity building blocks on each platform'],
   sections: [
     {
@@ -223,10 +206,7 @@ const connectivityComparison: Lesson = {
   ],
 };
 
-const connectivityChallenge: LabDefinition = {
-  id: 'connect-three-networks',
-  title: 'Connect Three Networks',
-  type: 'challenge',
+const connectivityChallenge: LabBody = {
   difficulty: 'intermediate',
   estimatedTime: '10 minutes',
   description: 'Design connectivity between two application networks and an on-premises datacenter, then compare your design against assessed options.',
@@ -321,20 +301,16 @@ const connectivityChallenge: LabDefinition = {
   },
 };
 
-export const connectingNetworks: ConceptMeta = {
-  id: 'connecting-networks',
-  title: 'Connecting Networks',
-  description:
-    'Peering, VPN, and hybrid connectivity patterns for linking virtual networks to each other and to on-premises infrastructure.',
-  status: 'available',
-  learningObjectives: [
-    'Explain peering and its non-transitivity, and design hub-and-spoke connectivity',
-    'Compare site-to-site VPN with private circuits for hybrid connectivity',
-    'Use private endpoints to remove internet paths to managed services',
-  ],
-  prerequisites: ['virtual-networks', 'subnets-and-routing'],
-  relatedConcepts: ['virtual-networks', 'subnets-and-routing', 'dns-and-content-delivery'],
-  estimatedMinutes: 55,
-  lessons: [peeringAndTransitivity, hybridConnectivity, azureConnectivity, awsConnectivity, connectivityComparison],
-  labs: [connectivityChallenge],
+export const content: ConceptContentModule = {
+  lessons: {
+    'peering-and-transitivity': peeringAndTransitivity,
+    'hybrid-and-private-connectivity': hybridConnectivity,
+    'azure-network-connectivity': azureConnectivity,
+    'aws-network-connectivity': awsConnectivity,
+    'connectivity-comparison': connectivityComparison,
+  },
+  labs: {
+    'connect-three-networks': connectivityChallenge,
+  },
+  simulations: {},
 };

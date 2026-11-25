@@ -1,11 +1,10 @@
-import type { ConceptMeta, LabDefinition, Lesson } from '../../types';
-import { regionZoneExplorerScene } from './scenes';
+import type { ConceptContentModule, LabBody, LessonBody } from '../../types';
+import { regionZoneExplorerScene } from './regions-and-availability-zones.scenes';
 import { zoneFailureSimulation, type ZoneFailureState } from './simulations';
+import { renderZoneFailureState } from './zone-failure-view';
+import { bindSimulation } from '../../../engines/lab/bind-simulation';
 
-const regionsAndZonesExplained: Lesson = {
-  id: 'regions-and-zones-explained',
-  title: 'Regions and Availability Zones',
-  kind: 'concept',
+const regionsAndZonesExplained: LessonBody = {
   learningObjectives: [
     'Describe the relationship between a region and its availability zones',
     'Explain what makes an availability zone an independent failure domain',
@@ -86,10 +85,7 @@ const regionsAndZonesExplained: Lesson = {
   ],
 };
 
-const resourceScopes: Lesson = {
-  id: 'regional-zonal-and-global-resources',
-  title: 'Regional, Zonal, and Global Resources',
-  kind: 'concept',
+const resourceScopes: LessonBody = {
   learningObjectives: [
     'Classify a cloud resource as zonal, zone-redundant, regional, or global',
     'Predict which resources a single-zone failure affects',
@@ -179,10 +175,7 @@ const resourceScopes: Lesson = {
   ],
 };
 
-const faultDomains: Lesson = {
-  id: 'fault-domains-and-failure-isolation',
-  title: 'Fault Domains and Failure Isolation',
-  kind: 'concept',
+const faultDomains: LessonBody = {
   learningObjectives: [
     'Explain fault domains and update domains as failure boundaries smaller than a zone',
     'Choose the failure boundary that matches a workload’s resilience goal',
@@ -254,10 +247,7 @@ const faultDomains: Lesson = {
   ],
 };
 
-const choosingRegions: Lesson = {
-  id: 'choosing-regions-and-zones',
-  title: 'Choosing Regions and Zones',
-  kind: 'concept',
+const choosingRegions: LessonBody = {
   learningObjectives: ['Weigh the factors that drive region selection for a workload'],
   sections: [
     {
@@ -322,11 +312,7 @@ const choosingRegions: Lesson = {
   ],
 };
 
-const azureRegionsAndZones: Lesson = {
-  id: 'azure-regions-and-availability-zones',
-  title: 'Azure Regions and Availability Zones',
-  kind: 'provider',
-  providerId: 'azure',
+const azureRegionsAndZones: LessonBody = {
   learningObjectives: ['Map Azure’s regions, availability zones, and availability sets onto the general model'],
   sections: [
     {
@@ -367,11 +353,7 @@ const azureRegionsAndZones: Lesson = {
   },
 };
 
-const awsRegionsAndZones: Lesson = {
-  id: 'aws-regions-and-availability-zones',
-  title: 'AWS Regions and Availability Zones',
-  kind: 'provider',
-  providerId: 'aws',
+const awsRegionsAndZones: LessonBody = {
   learningObjectives: ['Map AWS’s Regions, Availability Zones, and AZ IDs onto the general model'],
   sections: [
     {
@@ -411,10 +393,7 @@ const awsRegionsAndZones: Lesson = {
   },
 };
 
-const regionsComparison: Lesson = {
-  id: 'regions-and-zones-comparison',
-  title: 'Comparison: Azure vs. AWS Zones',
-  kind: 'comparison',
+const regionsComparison: LessonBody = {
   learningObjectives: ['Compare how Azure and AWS scope networks and resources to zones without treating them as identical'],
   sections: [
     {
@@ -473,10 +452,7 @@ const regionsComparison: Lesson = {
   ],
 };
 
-const zoneFailureLab: LabDefinition = {
-  id: 'zone-failure-simulation-lab',
-  title: 'Survive a Zone Failure',
-  type: 'simulation',
+const zoneFailureLab: LabBody = {
   difficulty: 'intermediate',
   estimatedTime: '15 minutes',
   description:
@@ -517,29 +493,20 @@ const zoneFailureLab: LabDefinition = {
   },
 };
 
-export const regionsAndAvailabilityZones: ConceptMeta = {
-  id: 'regions-and-availability-zones',
-  title: 'Regions and Availability Zones',
-  description:
-    'Geographic regions and isolated data center groups that provide fault isolation and low-latency access, including fault domains, update domains, and the distinction between regional and zonal resources.',
-  status: 'available',
-  learningObjectives: [
-    'Explain how regions and availability zones form nested, independent failure domains',
-    'Classify resources as zonal, zone-redundant, regional, or global and predict the impact of a zone failure',
-    'Choose regions and zones based on latency, residency, availability, and resilience requirements',
-    'Compare how Azure and AWS scope networks and resources to zones',
-  ],
-  prerequisites: [],
-  relatedConcepts: ['data-centers-and-edge-locations', 'geographic-redundancy-and-data-residency', 'high-availability', 'virtual-machines'],
-  estimatedMinutes: 80,
-  lessons: [
-    regionsAndZonesExplained,
-    resourceScopes,
-    faultDomains,
-    choosingRegions,
-    azureRegionsAndZones,
-    awsRegionsAndZones,
-    regionsComparison,
-  ],
-  labs: [zoneFailureLab],
+export const content: ConceptContentModule = {
+  lessons: {
+    'regions-and-zones-explained': regionsAndZonesExplained,
+    'regional-zonal-and-global-resources': resourceScopes,
+    'fault-domains-and-failure-isolation': faultDomains,
+    'choosing-regions-and-zones': choosingRegions,
+    'azure-regions-and-availability-zones': azureRegionsAndZones,
+    'aws-regions-and-availability-zones': awsRegionsAndZones,
+    'regions-and-zones-comparison': regionsComparison,
+  },
+  labs: {
+    'zone-failure-simulation-lab': zoneFailureLab,
+  },
+  simulations: {
+    'zone-failure-simulation-lab': bindSimulation(zoneFailureSimulation, renderZoneFailureState),
+  },
 };

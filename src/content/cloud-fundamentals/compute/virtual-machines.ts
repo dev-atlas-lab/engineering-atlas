@@ -1,11 +1,10 @@
-import type { ConceptMeta, Lesson, LabDefinition } from '../../types';
-import { vmArchitectureScene } from './scenes';
+import type { ConceptContentModule, LabBody, LessonBody } from '../../types';
+import { vmArchitectureScene } from './virtual-machines.scenes';
 import { vmResourceAllocationSimulation } from './simulations';
+import { renderVmAllocationState } from './vm-allocation-view';
+import { bindSimulation } from '../../../engines/lab/bind-simulation';
 
-const introduction: Lesson = {
-  id: 'introduction-to-virtual-machines',
-  title: 'Introduction to Virtual Machines',
-  kind: 'concept',
+const introduction: LessonBody = {
   learningObjectives: [
     'Define what a virtual machine is and the problem it solves',
     'Explain why organizations use VMs instead of dedicated physical servers',
@@ -94,10 +93,7 @@ const introduction: Lesson = {
   ],
 };
 
-const virtualizationFundamentals: Lesson = {
-  id: 'virtualization-fundamentals',
-  title: 'Virtualization Fundamentals and Hypervisors',
-  kind: 'concept',
+const virtualizationFundamentals: LessonBody = {
   learningObjectives: [
     'Explain how a hypervisor shares one physical host among multiple isolated guest operating systems',
     'Distinguish Type 1 (bare-metal) hypervisors from Type 2 (hosted) hypervisors',
@@ -180,10 +176,7 @@ const virtualizationFundamentals: Lesson = {
   ],
 };
 
-const vmArchitecture: Lesson = {
-  id: 'vm-architecture',
-  title: 'VM Architecture',
-  kind: 'concept',
+const vmArchitecture: LessonBody = {
   learningObjectives: [
     'Describe how a host’s physical resources are partitioned and presented to guest VMs',
     'Explain why one VM cannot see or affect another VM on the same host',
@@ -246,10 +239,7 @@ const vmArchitecture: Lesson = {
   ],
 };
 
-const computeMemoryStorage: Lesson = {
-  id: 'compute-memory-and-storage-allocation',
-  title: 'Compute, Memory, and Storage Allocation',
-  kind: 'concept',
+const computeMemoryStorage: LessonBody = {
   learningObjectives: [
     'Explain the trade-offs involved in choosing a VM size',
     'Distinguish network-attached block storage from local/ephemeral instance storage',
@@ -317,10 +307,7 @@ const computeMemoryStorage: Lesson = {
   ],
 };
 
-const vmNetworkingAndSecurity: Lesson = {
-  id: 'vm-networking-and-security',
-  title: 'VM Networking and Security',
-  kind: 'concept',
+const vmNetworkingAndSecurity: LessonBody = {
   learningObjectives: [
     'Describe how a VM attaches to a virtual network and how traffic to it is controlled',
   ],
@@ -375,11 +362,7 @@ const vmNetworkingAndSecurity: Lesson = {
   ],
 };
 
-const azureVirtualMachines: Lesson = {
-  id: 'azure-virtual-machines',
-  title: 'Azure Virtual Machines',
-  kind: 'provider',
-  providerId: 'azure',
+const azureVirtualMachines: LessonBody = {
   learningObjectives: ['Map Azure’s VM-specific terminology and resiliency features onto the concepts already covered'],
   sections: [
     {
@@ -433,11 +416,7 @@ const azureVirtualMachines: Lesson = {
   },
 };
 
-const awsEc2: Lesson = {
-  id: 'aws-ec2',
-  title: 'AWS EC2',
-  kind: 'provider',
-  providerId: 'aws',
+const awsEc2: LessonBody = {
   learningObjectives: ['Map AWS EC2’s terminology and resiliency features onto the concepts already covered'],
   sections: [
     {
@@ -491,10 +470,7 @@ const awsEc2: Lesson = {
   },
 };
 
-const architectureComparison: Lesson = {
-  id: 'architecture-comparison',
-  title: 'Architecture Comparison: Azure VMs vs. AWS EC2',
-  kind: 'comparison',
+const architectureComparison: LessonBody = {
   learningObjectives: ['Compare Azure VMs and EC2 across architecture, resiliency, and storage without treating either as a drop-in equivalent'],
   sections: [
     {
@@ -558,10 +534,7 @@ const architectureComparison: Lesson = {
   ],
 };
 
-const vmResourceAllocationLab: LabDefinition = {
-  id: 'vm-resource-allocation-lab',
-  title: 'Design a VM Architecture',
-  type: 'simulation',
+const vmResourceAllocationLab: LabBody = {
   difficulty: 'beginner',
   estimatedTime: '15 minutes',
   description:
@@ -610,28 +583,21 @@ const vmResourceAllocationLab: LabDefinition = {
   },
 };
 
-export const virtualMachines: ConceptMeta = {
-  id: 'virtual-machines',
-  title: 'Virtual Machines',
-  description: 'Virtualized servers that provide full OS-level control over compute resources.',
-  status: 'available',
-  learningObjectives: [
-    'Explain what a virtual machine is and why hypervisor-based virtualization exists',
-    'Describe how host resources are allocated and isolated across VMs',
-    'Compare Azure Virtual Machines and AWS EC2 at an architectural level',
-  ],
-  prerequisites: [],
-  relatedConcepts: ['containers', 'serverless-functions', 'high-availability', 'regions-and-availability-zones'],
-  estimatedMinutes: 90,
-  lessons: [
-    introduction,
-    virtualizationFundamentals,
-    vmArchitecture,
-    computeMemoryStorage,
-    vmNetworkingAndSecurity,
-    azureVirtualMachines,
-    awsEc2,
-    architectureComparison,
-  ],
-  labs: [vmResourceAllocationLab],
+export const content: ConceptContentModule = {
+  lessons: {
+    'introduction-to-virtual-machines': introduction,
+    'virtualization-fundamentals': virtualizationFundamentals,
+    'vm-architecture': vmArchitecture,
+    'compute-memory-and-storage-allocation': computeMemoryStorage,
+    'vm-networking-and-security': vmNetworkingAndSecurity,
+    'azure-virtual-machines': azureVirtualMachines,
+    'aws-ec2': awsEc2,
+    'architecture-comparison': architectureComparison,
+  },
+  labs: {
+    'vm-resource-allocation-lab': vmResourceAllocationLab,
+  },
+  simulations: {
+    'vm-resource-allocation-lab': bindSimulation(vmResourceAllocationSimulation, renderVmAllocationState),
+  },
 };

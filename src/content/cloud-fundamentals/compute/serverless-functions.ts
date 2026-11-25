@@ -1,10 +1,7 @@
-import type { ConceptMeta, Lesson } from '../../types';
-import { serverlessRequestFlowScene } from './scenes';
+import type { ConceptContentModule, LessonBody } from '../../types';
+import { serverlessRequestFlowScene } from './serverless-functions.scenes';
 
-const introductionToServerless: Lesson = {
-  id: 'introduction-to-serverless',
-  title: 'Introduction to Serverless Computing',
-  kind: 'concept',
+const introductionToServerless: LessonBody = {
   learningObjectives: [
     'Explain what "serverless" means architecturally, and what it does not mean',
     'Identify workloads well-suited to a serverless execution model',
@@ -73,10 +70,7 @@ const introductionToServerless: Lesson = {
   ],
 };
 
-const eventDrivenCompute: Lesson = {
-  id: 'event-driven-compute',
-  title: 'Event-Driven Compute and Cold Starts',
-  kind: 'concept',
+const eventDrivenCompute: LessonBody = {
   learningObjectives: ['Trace the lifecycle of a request through a serverless platform, including the cold start penalty'],
   sections: [
     {
@@ -135,11 +129,7 @@ const eventDrivenCompute: Lesson = {
   ],
 };
 
-const azureFunctions: Lesson = {
-  id: 'azure-functions',
-  title: 'Azure Functions',
-  kind: 'provider',
-  providerId: 'azure',
+const azureFunctions: LessonBody = {
   learningObjectives: ['Describe Azure Functions’ trigger model and hosting plan trade-offs'],
   sections: [
     {
@@ -182,11 +172,7 @@ const azureFunctions: Lesson = {
   },
 };
 
-const awsLambda: Lesson = {
-  id: 'aws-lambda',
-  title: 'AWS Lambda',
-  kind: 'provider',
-  providerId: 'aws',
+const awsLambda: LessonBody = {
   learningObjectives: ['Describe AWS Lambda’s event source model and how provisioned concurrency addresses cold starts'],
   sections: [
     {
@@ -229,10 +215,7 @@ const awsLambda: Lesson = {
   },
 };
 
-const serverlessComparison: Lesson = {
-  id: 'serverless-architecture-comparison',
-  title: 'Architecture Comparison: Azure Functions vs. AWS Lambda',
-  kind: 'comparison',
+const serverlessComparison: LessonBody = {
   learningObjectives: ['Compare Azure Functions and AWS Lambda, including the asymmetric approach each takes to workflow orchestration'],
   sections: [
     {
@@ -299,21 +282,14 @@ const serverlessComparison: Lesson = {
   ],
 };
 
-export const serverlessFunctions: ConceptMeta = {
-  id: 'serverless-functions',
-  title: 'Serverless Functions',
-  description: 'Event-driven compute that runs code without managing servers, scaling automatically per invocation.',
-  status: 'available',
-  learningObjectives: [
-    'Explain what "serverless" means architecturally and when it fits a workload',
-    'Trace a request through a serverless platform, including cold starts',
-    'Compare Azure Functions and AWS Lambda, including their differing approaches to workflow orchestration',
-  ],
-  prerequisites: ['virtual-machines'],
-  relatedConcepts: ['containers', 'virtual-machines'],
-  estimatedMinutes: 50,
-  lessons: [introductionToServerless, eventDrivenCompute, azureFunctions, awsLambda, serverlessComparison],
-  // No lab in this slice — deferred and documented, not silently dropped
-  // (docs/M1B_DESIGN_DECISIONS.md pattern: deferral is explicit, not an
-  // empty placeholder pretending to be complete).
+export const content: ConceptContentModule = {
+  lessons: {
+    'introduction-to-serverless': introductionToServerless,
+    'event-driven-compute': eventDrivenCompute,
+    'azure-functions': azureFunctions,
+    'aws-lambda': awsLambda,
+    'serverless-architecture-comparison': serverlessComparison,
+  },
+  labs: {},
+  simulations: {},
 };

@@ -1,7 +1,5 @@
 import type { Category } from '../../types';
-import { virtualMachines } from './virtual-machines';
-import { containers } from './containers';
-import { serverlessFunctions } from './serverless-functions';
+import { virtualMachines, containers, serverlessFunctions } from './meta';
 
 export const compute: Category = {
   id: 'compute',

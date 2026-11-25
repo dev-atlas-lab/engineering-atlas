@@ -1,8 +1,5 @@
 import type { Category } from '../../types';
-import { virtualNetworks } from './virtual-networks';
-import { subnetsAndRouting } from './subnets-and-routing';
-import { connectingNetworks } from './connecting-networks';
-import { dnsAndContentDelivery } from './dns-and-content-delivery';
+import { virtualNetworks, subnetsAndRouting, connectingNetworks, dnsAndContentDelivery } from './meta';
 
 export const networking: Category = {
   id: 'networking',

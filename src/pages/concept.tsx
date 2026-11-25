@@ -1,4 +1,6 @@
+import { useEffect } from 'react';
 import { Link, useParams } from 'react-router';
+import { conceptContentLoader } from '../content/cloud-fundamentals/concept-loaders';
 import { Clock, Wrench } from 'lucide-react';
 import { findConcept, type ConceptStatus } from '../content/cloud-fundamentals';
 import { normalizeConceptStatus } from '../content/status';
@@ -30,6 +32,17 @@ export default function ConceptPage() {
   const { domainId, categoryId, conceptId } = useParams();
   const concept =
     domainId && categoryId && conceptId ? findConcept(domainId, categoryId, conceptId) : undefined;
+
+  // The overview renders from metadata alone. Start downloading this one
+  // concept's content now, since the learner's next step is usually a
+  // lesson; failures are ignored here and surface on the lesson page.
+  const prefetchId =
+    concept && normalizeConceptStatus(concept.status) === 'available' && (concept.lessons?.length ?? 0) > 0
+      ? concept.id
+      : undefined;
+  useEffect(() => {
+    if (prefetchId) conceptContentLoader.load(prefetchId).catch(() => {});
+  }, [prefetchId]);
 
   if (!concept || !domainId || !categoryId) return <NotFound />;
 
