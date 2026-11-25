@@ -142,6 +142,8 @@ For scenes with multiple states, the timeline controller provides:
 
 Reusable building blocks for constructing scenes.
 
+The identity and security primitives (`User` through `Scope`) were added in Slice 2B for the IAM and Security categories.
+
 | Primitive | Represents | Visual |
 |---|---|---|
 | `Server` | Compute instance | Rounded rect with status indicator |
@@ -155,6 +157,13 @@ Reusable building blocks for constructing scenes.
 | `Gateway` | API gateway | Shield rect |
 | `Region` | Cloud region | Large container with label |
 | `AvailabilityZone` | AZ | Container within region |
+| `User` | Human principal | Person icon |
+| `Identity` | Identity provider or token service | Fingerprint icon |
+| `Key` | Cryptographic key or key vault | Key icon |
+| `Policy` | Policy, guardrail, or authorization engine | Document icon |
+| `Firewall` | Firewall, WAF, or filtering layer | Wall icon |
+| `Secret` | Secret store | Padlock icon |
+| `Scope` | Management scope (management group, subscription, resource group) | Folder-tree icon |
 
 Each primitive has:
 - A consistent visual identity across all scenes.

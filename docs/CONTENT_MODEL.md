@@ -257,7 +257,7 @@ Each concept is described in two places (see `docs/decisions/ADR-007-per-concept
 
 The tests fail if any of these disagree.
 
-## Implementation Rules (as of Slice 2A.1)
+## Implementation Rules (as of Slice 2B)
 
 These rules are enforced by `src/content/cloud-fundamentals/index.test.ts` and `concept-loaders.test.ts`:
 
@@ -267,3 +267,7 @@ These rules are enforced by `src/content/cloud-fundamentals/index.test.ts` and `
 - **Every simulation lab has a simulation binding** in its own concept's content module. The binding's simulation id must match the lab's `simulationId`.
 - **Sequence visualizations have one state per message plus an initial state**, and every edge references existing nodes.
 - **Challenge solutions only reference decision and option IDs that exist.**
+- **Active status is listed explicitly.** The test keeps a list of the concept IDs expected to be Active; every other concept must be Coming soon. Changing a status is a deliberate edit to that list, never a side effect.
+- **Each category with authored content has its own folder** (`<category>/meta.ts`, `<category>/index.ts`, and one module per concept). Categories that are entirely Coming soon stay as single files in `categories/`.
+
+Challenge options may carry authored `feedback` (`effective`, `partial`, or `ineffective`, with an explanation). It is shown per option after evaluation. An overall verdict is shown only for an exact authored solution, so the absence of a verdict never implies the learner's design is wrong — see `docs/LAB_ENGINE.md`.
