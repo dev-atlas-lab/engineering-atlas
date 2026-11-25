@@ -171,11 +171,25 @@ export interface HandsOnLab {
   cleanupInstructions?: string;
 }
 
+/** Authored feedback on one option, shown after evaluation whether or not the
+ *  learner's whole combination matches an authored solution. */
+export interface ChallengeOptionFeedback {
+  rating: 'effective' | 'partial' | 'ineffective';
+  text: string;
+}
+
+export interface ChallengeOption {
+  id: string;
+  label: string;
+  description: string;
+  feedback?: ChallengeOptionFeedback;
+}
+
 export interface ChallengeDecision {
   id: string;
   question: string;
   type: 'single-choice' | 'multi-choice';
-  options: { id: string; label: string; description: string }[];
+  options: ChallengeOption[];
 }
 
 export interface ChallengeSolution {

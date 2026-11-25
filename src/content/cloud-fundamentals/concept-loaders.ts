@@ -26,7 +26,10 @@ export const conceptLoaders: Record<string, ConceptModuleLoader> = {
   'identity-and-authentication': () => import('./identity-and-access-management/identity-and-authentication'),
   'authorization-and-policies': () => import('./identity-and-access-management/authorization-and-policies'),
   'workload-and-federated-identity': () => import('./identity-and-access-management/workload-and-federated-identity'),
+  'security-fundamentals': () => import('./security/security-fundamentals'),
   'encryption-and-key-management': () => import('./security/encryption-and-key-management'),
+  'network-security': () => import('./security/network-security'),
+  'security-monitoring-and-compliance': () => import('./security/security-monitoring-and-compliance'),
 };
 
 /** A concept's metadata merged with its lazily loaded bodies, in metadata order. */

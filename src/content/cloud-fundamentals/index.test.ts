@@ -24,7 +24,7 @@ const ACTIVE_CONCEPTS = [
   'block-storage', 'object-storage', 'file-storage',
   'virtual-networks', 'subnets-and-routing', 'connecting-networks', 'dns-and-content-delivery',
   'identity-and-authentication', 'authorization-and-policies', 'workload-and-federated-identity',
-  'encryption-and-key-management',
+  'security-fundamentals', 'encryption-and-key-management', 'network-security', 'security-monitoring-and-compliance',
 ];
 
 // Concept ids are route segments; changing one breaks links and progress.

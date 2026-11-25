@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ChallengeLab, ChallengeSolution } from '../../content/types';
+import type { ChallengeLab, ChallengeOptionFeedback, ChallengeSolution } from '../../content/types';
 
 interface ChallengeLabViewProps {
   content: ChallengeLab;
@@ -39,6 +39,8 @@ export function ChallengeLabView({ content }: ChallengeLabViewProps) {
     );
     setResult(match ?? 'unmatched');
   }
+
+  const hasOptionFeedback = content.decisions.some((d) => d.options.some((o) => o.feedback));
 
   const allAnswered = content.decisions.every((decision) => {
     const value = answers[decision.id];
@@ -115,20 +117,75 @@ export function ChallengeLabView({ content }: ChallengeLabViewProps) {
 
       {result === 'unmatched' && (
         <div className="rounded-lg border border-border bg-bg-subtle p-4 text-[13px] text-text-secondary">
-          This combination isn&apos;t one of the pre-assessed designs. Check each requirement and constraint above
-          against your choices individually — more than one reasonable design may exist.
+          {hasOptionFeedback
+            ? 'This exact combination has no authored overall assessment, so no overall verdict is given. The feedback on each choice below is authored per option and still applies.'
+            : 'This combination isn’t one of the pre-assessed designs. Check each requirement and constraint above against your choices individually — more than one reasonable design may exist.'}
         </div>
       )}
 
       {result && result !== 'unmatched' && (
         <div className="rounded-lg border border-border p-4">
           <p className="text-[13px] font-medium text-text">
-            Assessment: <span className="capitalize">{result.assessment}</span>
+            Assessment of this exact combination: <span className="capitalize">{result.assessment}</span>
           </p>
           <p className="mt-1 text-[13px] text-text-secondary">{result.explanation}</p>
           <p className="mt-1 text-[13px] text-text-muted">Trade-offs: {result.tradeoffs}</p>
         </div>
       )}
+
+      {result && hasOptionFeedback && <OptionFeedback decisions={content.decisions} answers={answers} />}
+    </div>
+  );
+}
+
+const ratingText: Record<ChallengeOptionFeedback['rating'], string> = {
+  effective: 'Effective',
+  partial: 'Partly effective',
+  ineffective: 'Ineffective or harmful',
+};
+
+const ratingClass: Record<ChallengeOptionFeedback['rating'], string> = {
+  effective: 'text-success',
+  partial: 'text-warning',
+  ineffective: 'text-error',
+};
+
+/** Per-option feedback: every selected option, plus effective options the
+ *  learner left out — so a partial answer still learns what it missed. */
+function OptionFeedback({ decisions, answers }: { decisions: ChallengeLab['decisions']; answers: Record<string, Answer> }) {
+  return (
+    <div className="space-y-3 rounded-lg border border-border p-4">
+      <h3 className="text-[13px] font-medium text-text">Feedback on each choice</h3>
+      {decisions.map((decision) => {
+        const answer = answers[decision.id];
+        const selected = (id: string) => (Array.isArray(answer) ? answer.includes(id) : answer === id);
+        const chosen = decision.options.filter((o) => selected(o.id) && o.feedback);
+        const missed = decision.options.filter((o) => !selected(o.id) && o.feedback?.rating === 'effective');
+        if (chosen.length === 0 && missed.length === 0) return null;
+        return (
+          <div key={decision.id}>
+            <p className="text-[12px] font-medium uppercase tracking-wide text-text-muted">{decision.question}</p>
+            <ul className="mt-1 space-y-1.5">
+              {chosen.map((option) => (
+                <li key={option.id} className="text-[13px] text-text-secondary">
+                  <span className="font-medium text-text">{option.label}</span>{' '}
+                  <span className={`text-[12px] font-medium ${ratingClass[option.feedback!.rating]}`}>({ratingText[option.feedback!.rating]})</span>
+                  {' — '}
+                  {option.feedback!.text}
+                </li>
+              ))}
+              {missed.map((option) => (
+                <li key={option.id} className="text-[13px] text-text-secondary">
+                  <span className="font-medium text-text">Not selected: {option.label}</span>{' '}
+                  <span className="text-[12px] font-medium text-success">(Effective)</span>
+                  {' — '}
+                  {option.feedback!.text}
+                </li>
+              ))}
+            </ul>
+          </div>
+        );
+      })}
     </div>
   );
 }

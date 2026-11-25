@@ -40,9 +40,9 @@ async function waitForLessonBody() {
 describe('discovery pages render from metadata alone', () => {
   it.each([
     ['Home', '/', /active · .* coming soon/],
-    ['the domain page', '/cloud-fundamentals', /4 active/],
+    ['the domain page', '/cloud-fundamentals', /Core cloud computing concepts across Azure and AWS/],
     ['a category page', '/cloud-fundamentals/storage', /Block Storage/],
-    ['a Coming-soon concept', '/cloud-fundamentals/security/network-security', /planned but not yet started/],
+    ['a Coming-soon concept', '/cloud-fundamentals/load-balancing/application-load-balancing', /planned but not yet started/],
   ])('%s loads no concept content', async (_name, path, expected) => {
     await renderApp(path);
     expect(await screen.findByText(expected)).toBeInTheDocument();
