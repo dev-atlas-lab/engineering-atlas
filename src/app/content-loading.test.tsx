@@ -109,6 +109,35 @@ describe('concept and lesson routes load only their own concept', () => {
     expect(loadedConceptIds()).toEqual(['subnets-and-routing']);
   });
 
+  it('an IAM lab deep link loads only its concept and renders the policy simulator', async () => {
+    await renderApp('/cloud-fundamentals/identity-and-access-management/authorization-and-policies/labs/iam-policy-evaluation-lab');
+    expect(await screen.findByText('Policies considered')).toBeInTheDocument();
+    expect(screen.getByText(/Simplified model of AWS evaluation within one account/)).toBeInTheDocument();
+    expect(loadedConceptIds()).toEqual(['authorization-and-policies']);
+  });
+
+  it('a security lesson deep link loads only its concept, with breadcrumbs and lesson navigation from metadata', async () => {
+    await renderApp('/cloud-fundamentals/security/network-security/waf-and-ddos');
+    await waitForLessonBody();
+    expect(screen.getByText(/Three kinds of denial of service/)).toBeInTheDocument();
+    expect(loadedConceptIds()).toEqual(['network-security']);
+    const crumbs = within(screen.getByRole('navigation', { name: 'Breadcrumb' }));
+    expect(crumbs.getByText('Security')).toBeInTheDocument();
+    expect(crumbs.getByText('Network Security')).toBeInTheDocument();
+    const pagination = within(screen.getByRole('navigation', { name: 'Lesson pagination' }));
+    expect(pagination.getByText(/Cloud Firewalls and Traffic Inspection/)).toBeInTheDocument();
+    expect(pagination.getByText(/Segmentation and Private Connectivity/)).toBeInTheDocument();
+  });
+
+  it('the IAM and Security category pages load no concept content', async () => {
+    for (const path of ['/cloud-fundamentals/identity-and-access-management', '/cloud-fundamentals/security']) {
+      await renderApp(path);
+      await act(async () => {});
+      cleanup();
+    }
+    expect(loadedConceptIds()).toEqual([]);
+  });
+
   it('an unknown lesson id is Not Found without downloading anything', async () => {
     await renderApp('/cloud-fundamentals/storage/block-storage/no-such-lesson');
     expect(await screen.findByText('Page Not Found')).toBeInTheDocument();
