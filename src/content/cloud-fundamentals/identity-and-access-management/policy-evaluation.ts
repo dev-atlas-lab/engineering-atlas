@@ -262,7 +262,7 @@ export function evaluatePolicies(config: PolicyConfig): Evaluation {
     (p?.matches ?? []).filter((m) => m.effect === effect && m.matches);
 
   const steps: EvalStep[] = [];
-  const caller = config.principal === 'user' ? 'IAM user dana' : 'a session of role app-role (session build-42)';
+  const caller = config.principal === 'user' ? 'IAM user dana' : 'A session of role app-role (session build-42)';
   steps.push({
     stage: 'request',
     title: 'The request',
