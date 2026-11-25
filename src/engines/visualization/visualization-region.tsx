@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { SceneRenderer } from './scene-renderer';
 import { TimelineController } from './timeline-controller';
-import { ComponentInspector } from './component-inspector';
+import { ComponentInspector, type NodeConnection } from './component-inspector';
 import { resolveSceneAtState, type SceneDefinition } from './types';
 
 interface VisualizationRegionProps {
@@ -18,8 +18,18 @@ export function VisualizationRegion({ scene }: VisualizationRegionProps) {
   const [stateIndex, setStateIndex] = useState(0);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
-  const { nodes, state } = useMemo(() => resolveSceneAtState(scene, stateIndex), [scene, stateIndex]);
+  const { nodes, edges, state } = useMemo(() => resolveSceneAtState(scene, stateIndex), [scene, stateIndex]);
   const selectedNode = nodes.find((n) => n.id === selectedNodeId) ?? null;
+
+  const connections = useMemo<NodeConnection[]>(() => {
+    if (!selectedNodeId) return [];
+    const labelOf = (id: string) => nodes.find((n) => n.id === id)?.label ?? id;
+    return edges.flatMap<NodeConnection>((edge) => {
+      if (edge.source === selectedNodeId) return [{ id: edge.id, direction: 'out', otherLabel: labelOf(edge.target), edgeLabel: edge.label }];
+      if (edge.target === selectedNodeId) return [{ id: edge.id, direction: 'in', otherLabel: labelOf(edge.source), edgeLabel: edge.label }];
+      return [];
+    });
+  }, [edges, nodes, selectedNodeId]);
 
   return (
     <div className="space-y-3">
@@ -44,7 +54,7 @@ export function VisualizationRegion({ scene }: VisualizationRegionProps) {
         </>
       )}
 
-      <ComponentInspector node={selectedNode} onClose={() => setSelectedNodeId(null)} />
+      <ComponentInspector node={selectedNode} connections={connections} onClose={() => setSelectedNodeId(null)} />
     </div>
   );
 }

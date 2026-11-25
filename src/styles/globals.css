@@ -75,3 +75,21 @@ body {
 *::after {
   border-color: var(--color-border);
 }
+
+/* SVG scene flow animation (docs/SVG_VISUALIZATION_STANDARD.md). Dashes drift
+   along an active or pending edge to show direction. Honours reduced motion. */
+@keyframes atlas-flow {
+  to {
+    stroke-dashoffset: -22;
+  }
+}
+
+.atlas-flow {
+  animation: atlas-flow 0.9s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .atlas-flow {
+    animation: none;
+  }
+}
