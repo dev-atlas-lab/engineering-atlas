@@ -251,6 +251,11 @@ describe('content schema validation — loaded concept content', () => {
       for (const edge of scene.edges) {
         expect(nodeIds.has(edge.source) && nodeIds.has(edge.target), `${scene.id}:${edge.id}`).toBe(true);
       }
+      // Boundaries (ADR-008) must reference existing nodes and be non-empty.
+      for (const boundary of scene.boundaries ?? []) {
+        expect(boundary.nodeIds.length, `${scene.id}:${boundary.id}`).toBeGreaterThan(0);
+        for (const id of boundary.nodeIds) expect(nodeIds.has(id), `${scene.id}:${boundary.id}:${id}`).toBe(true);
+      }
     }
   });
 
