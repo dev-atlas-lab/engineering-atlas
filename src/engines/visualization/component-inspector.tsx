@@ -1,13 +1,23 @@
-import { X } from 'lucide-react';
+import { ArrowRight, ArrowLeft, X } from 'lucide-react';
 import { primitiveIcons, statusDotClass } from './primitives';
 import type { SceneNode } from './types';
 
+/** A relationship of the selected node to another, derived from the scene's
+ *  edges — so selecting a node reveals its connections, not just its data. */
+export interface NodeConnection {
+  id: string;
+  direction: 'out' | 'in';
+  otherLabel: string;
+  edgeLabel?: string;
+}
+
 interface ComponentInspectorProps {
   node: SceneNode | null;
+  connections?: NodeConnection[];
   onClose: () => void;
 }
 
-export function ComponentInspector({ node, onClose }: ComponentInspectorProps) {
+export function ComponentInspector({ node, connections = [], onClose }: ComponentInspectorProps) {
   if (!node) {
     return (
       <div className="flex h-full items-center justify-center rounded-lg border border-dashed border-border p-6 text-center text-[13px] text-text-muted">
@@ -51,6 +61,25 @@ export function ComponentInspector({ node, onClose }: ComponentInspectorProps) {
             </div>
           ))}
         </dl>
+      )}
+
+      {connections.length > 0 && (
+        <div className="mt-3 border-t border-border-subtle pt-3">
+          <h4 className="text-[11px] font-medium uppercase tracking-wide text-text-muted">Connections</h4>
+          <ul className="mt-1.5 space-y-1">
+            {connections.map((c) => (
+              <li key={c.id} className="flex items-center gap-1.5 text-[12px] text-text-secondary">
+                {c.direction === 'out' ? (
+                  <ArrowRight aria-label="to" className="size-3 shrink-0 text-text-muted" />
+                ) : (
+                  <ArrowLeft aria-label="from" className="size-3 shrink-0 text-text-muted" />
+                )}
+                <span className="font-medium text-text">{c.otherLabel}</span>
+                {c.edgeLabel && <span className="text-text-muted">· {c.edgeLabel}</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
     </div>
   );

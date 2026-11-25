@@ -81,7 +81,7 @@ describe('LessonPage — interactive diagrams', () => {
   it('lets a keyboard user select a sequence-diagram actor and populate the inspector', async () => {
     const user = userEvent.setup();
     await renderLesson(edgeLesson);
-    const actor = screen.getByRole('button', { name: 'Inspect Edge location' });
+    const actor = screen.getByRole('button', { name: 'Edge location — select to inspect' });
     actor.focus();
     await user.keyboard('{Enter}');
     expect(actor).toHaveAttribute('aria-pressed', 'true');

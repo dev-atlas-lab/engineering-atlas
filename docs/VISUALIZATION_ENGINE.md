@@ -29,8 +29,8 @@ The visualization engine renders interactive technical diagrams that adapt to th
             │   │   │
    ┌────────┘   │   └────────┐
    ▼            ▼            ▼
-ReactFlow    SVG/D3     Sequence
- Scene       Scene       Scene
+SvgTopology  SvgSequence  ReactFlow
+  Scene        Scene     (lazy, opt-in)
    │            │            │
    └────────┐   │   ┌────────┘
             ▼   ▼   ▼
@@ -97,18 +97,15 @@ interface SceneAnnotation {
 
 ### Scene Renderer
 
-The SceneRenderer reads the scene definition and delegates to the appropriate rendering strategy.
+The SceneRenderer reads the scene definition and delegates to the appropriate rendering strategy. Since Slice 2C (ADR-008), **declarative SVG is the default**; see `docs/SVG_VISUALIZATION_STANDARD.md` for the full standard.
 
-| Scene Type | Renderer | Technology | Use Case |
+| Scene Type / flag | Renderer | Technology | Use Case |
 |---|---|---|---|
-| `topology` | ReactFlowScene | React Flow | Infrastructure diagrams, network topologies |
-| `sequence` | SequenceScene | SVG | Protocol sequences, request flows |
-| `structure` | StructureScene | SVG / D3 | Data structures, trees, hierarchies |
-| `flow` | FlowScene | SVG | Decision flows, permission chains |
-| `timeline` | TimelineScene | SVG | Event timelines, state transitions over time |
-| `custom` | CustomScene | Any | Concept-specific visualizations |
+| `topology` | `SvgTopologyScene` | SVG | Infrastructure, topology, hierarchy, data flow |
+| `sequence` | `SvgSequenceScene` | SVG | Protocol sequences, request and lifecycle flows |
+| `interaction: 'graph'` | `ReactFlowScene` (lazy) | React Flow | Only when node-dragging / graph navigation is needed |
 
-The renderer is selected automatically based on `scene.type`. Lessons do not need to specify rendering details.
+The renderer is selected automatically from `scene.type` and the optional `scene.interaction`. Lessons do not specify rendering details. React Flow is lazy-loaded and only for `interaction: 'graph'`, so `@xyflow/react` stays out of the eager lesson chunk (no current scene uses it). The SVG renderers share one visual language and set of primitives (`src/engines/visualization/svg/`): `svg-tokens` (node/edge/flow/boundary/status conventions), `svg-layout` (pure geometry), `svg-primitives` (`SvgNode`, `SvgEdge`, `SvgBoundary`), `svg-legend`, and the two scene renderers. The `structure` / `flow` / `timeline` / `custom` types remain reserved for a future scene that an SVG topology or sequence cannot express.
 
 ### Component Inspector
 
@@ -129,6 +126,7 @@ For scenes with multiple states, the timeline controller provides:
 - **Play/Pause** — Auto-advance through states.
 - **Step Forward/Backward** — Move one state at a time.
 - **Scrub** — Jump to any state in the sequence.
+- **Connections** — Selecting a node also lists its connections (from the scene's edges) in the inspector, not only its attributes.
 - **Speed control** — Adjust animation speed.
 - **State label** — Show what the current state represents.
 
@@ -213,7 +211,7 @@ A mapping function converts simulation state into scene state. This keeps the si
 
 ## Performance
 
-- Render only visible nodes and edges (React Flow handles this for topology scenes).
+- SVG scenes are small; node sizing and edge routing are computed once per state in a pure layout pass (`svg-layout`).
 - Throttle state transitions to 60fps maximum.
 - Use CSS transforms for simple animations; reserve D3 transitions for complex ones.
-- Lazy-load D3 and React Flow — they are only needed when a visualization is active.
+- Lazy-load React Flow — it loads only for a scene with `interaction: 'graph'`, never on the default SVG path.
