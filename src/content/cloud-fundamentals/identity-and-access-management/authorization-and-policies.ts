@@ -1,5 +1,10 @@
-import type { ConceptContentModule, LessonBody } from '../../types';
+import type { ConceptContentModule, LabBody, LessonBody } from '../../types';
 import { rbacScopeScene } from './authorization-and-policies.scenes';
+import { policyEvaluationSimulation, type PolicyEvalState } from './policy-evaluation';
+import { renderPolicyEvaluationState } from './policy-evaluation-view';
+import { rbacScopeSimulation, type RbacState } from './rbac-scope';
+import { renderRbacScopeState } from './rbac-scope-view';
+import { bindSimulation } from '../../../engines/lab/bind-simulation';
 
 const authorizationModels: LessonBody = {
   learningObjectives: [
@@ -723,6 +728,130 @@ const authorizationComparison: LessonBody = {
   ],
 };
 
+const policyEvaluationLab: LabBody = {
+  difficulty: 'intermediate',
+  estimatedTime: '30 minutes',
+  description:
+    'Configure a principal, an S3 request, and the policies around it — identity policy, bucket policy, explicit denies, an SCP, a permissions boundary, and a session policy — then step through the evaluation and read exactly why the request is allowed or denied. A simplified model of AWS evaluation within one account; it runs entirely in your browser and nothing is sent to AWS.',
+  learningObjectives: [
+    'Predict and explain allow, explicit deny, and implicit deny outcomes',
+    'Show how SCPs, permissions boundaries, and session policies limit but never grant',
+    'Explain when a resource-based policy can grant access without an identity-based allow',
+  ],
+  prerequisites: [
+    { type: 'concept', id: 'how-policy-evaluation-works', label: 'How Policy Evaluation Works', description: 'Default deny, explicit deny, and guardrails.' },
+    { type: 'concept', id: 'aws-iam-policies', label: 'AWS IAM Policies and Policy Evaluation', description: 'Policy types and the single-account evaluation order.' },
+  ],
+  content: {
+    simulationId: policyEvaluationSimulation.id,
+    instructions: [
+      { id: 'missing', label: '1. Missing permission', description: 'Run the default: the role can read reports-bucket but tries to write. Step through and note that the denial is implicit — nothing granted the action.' },
+      { id: 'grant', label: '2. Least-privilege grant', description: 'Change the identity policy to “Read and write reports-bucket” and replay. The write is now allowed by a policy scoped to one bucket and two actions.' },
+      { id: 'explicit', label: '3. Explicit deny overrides allow', description: 'Set the identity policy to “s3:* on all resources”, the action to s3:DeleteObject, and add the bucket-policy deny. Several statements allow the delete; one denies it. Which wins?' },
+      { id: 'conflict', label: '4. Conflicting statements in one policy', description: 'Move the deny into the identity policy (“deny s3:DeleteObject everywhere”). The same policy now both allows and denies the request.' },
+      { id: 'guardrail', label: '5. Guardrails limit but never grant', description: 'Clear the deny, keep s3:* and choose s3:PutObject, then set the SCP to read-only. Repeat with the SCP back to full access and a read-only permissions boundary instead.' },
+      { id: 'resource', label: '6. Resource-based permission', description: 'Choose the IAM user dana, identity policy “None”, resource payroll-bucket, action s3:GetObject, and a bucket policy that allows read to the principal. Dana has no identity policy at all — why is she allowed?' },
+      { id: 'session', label: '7. Role ARN vs. session ARN', description: 'Switch to the role session with the same bucket policy and add the “reports-bucket only” session policy. The read is denied. Now change the bucket policy to name the session ARN and replay.' },
+    ],
+    parameters: [],
+    validationRules: [
+      {
+        id: 'explicit-over-allow',
+        label: 'An explicit deny overrode a matching allow',
+        check: (state) => {
+          const s = state as PolicyEvalState;
+          return s.decision === 'explicit-deny' && s.policies.some((p) => p.matches.some((m) => m.effect === 'Allow' && m.matches));
+        },
+      },
+      {
+        id: 'guardrail-block',
+        label: 'A guardrail (SCP, permissions boundary, or session policy) blocked an action that a policy granted',
+        check: (state) => {
+          const s = state as PolicyEvalState;
+          return (
+            s.decision === 'implicit-deny' &&
+            (s.decidedBy === 'scp' || s.decidedBy === 'boundary' || s.decidedBy === 'session') &&
+            s.policies.some((p) => (p.kind === 'identity' || p.kind === 'resource') && p.matches.some((m) => m.effect === 'Allow' && m.matches))
+          );
+        },
+      },
+      {
+        id: 'resource-grant',
+        label: 'A bucket policy granted access with no identity-based policy',
+        check: (state) => {
+          const s = state as PolicyEvalState;
+          return s.decision === 'allow' && s.grantedBy === 'resource' && s.config.identityPolicy === 'none';
+        },
+      },
+      {
+        id: 'least-privilege',
+        label: 'A write to reports-bucket was allowed by the least-privilege read/write policy',
+        check: (state) => {
+          const s = state as PolicyEvalState;
+          return s.decision === 'allow' && s.grantedBy === 'identity' && s.config.identityPolicy === 'read-write-reports' && s.config.action === 's3:PutObject';
+        },
+      },
+    ],
+  },
+};
+
+const rbacScopeLab: LabBody = {
+  difficulty: 'intermediate',
+  estimatedTime: '20 minutes',
+  description:
+    'Assign a role at different scopes of an Azure hierarchy — management group, subscription, resource group, or resource — and see which resources inherit it, how management and data actions differ, and how a deny assignment overrides even an Owner. Simplified and simulated in your browser; no Azure resources or permissions are touched.',
+  learningObjectives: [
+    'Predict which resources a role assignment reaches through inheritance',
+    'Distinguish management-plane Actions from data-plane DataActions',
+    'Explain why a deny assignment beats every role assignment',
+  ],
+  prerequisites: [
+    { type: 'concept', id: 'azure-rbac', label: 'Azure RBAC: Roles, Assignments, and Scopes', description: 'Role definitions, assignments, scopes, and deny assignments.' },
+  ],
+  content: {
+    simulationId: rbacScopeSimulation.id,
+    instructions: [
+      { id: 'inherit', label: '1. Inheritance', description: 'Run the default (Contributor on rg-web, modify app-web). Then move the assignment up to the Prod subscription and to the Corp management group. The decision stays the same — the tree shows how far the access now reaches.' },
+      { id: 'sideways', label: '2. Never sideways', description: 'Assign Contributor on rg-web and target sql-orders. The assignment exists but is not on sql-orders’ path.' },
+      { id: 'grant', label: '3. Granting access', description: 'With Contributor on Prod, try “Create a role assignment” on app-web. Read why Contributor cannot, then switch the role to Owner.' },
+      { id: 'data', label: '4. Data plane', description: 'Assign Owner on Prod and read a secret from kv-prod. Then assign Key Vault Secrets User directly on kv-prod and try again.' },
+      { id: 'deny', label: '5. Deny assignment', description: 'Assign Owner on Prod, enable the deny assignment, and delete sql-orders. Then delete app-web, outside rg-data.' },
+    ],
+    parameters: [],
+    validationRules: [
+      {
+        id: 'inherited-allow',
+        label: 'A request was allowed through an assignment inherited from a higher scope',
+        check: (state) => {
+          const s = state as RbacState;
+          return s.decision === 'allow' && s.config.assignmentScope !== s.config.target;
+        },
+      },
+      {
+        id: 'not-on-path',
+        label: 'A request was denied because the assignment was not on the resource’s scope path',
+        check: (state) => (state as RbacState).deniedBy === 'scope',
+      },
+      {
+        id: 'data-plane',
+        label: 'A secret was read with Key Vault Secrets User assigned on the vault itself',
+        check: (state) => {
+          const s = state as RbacState;
+          return s.decision === 'allow' && s.config.operation === 'read-secret' && s.config.role === 'kv-secrets-user' && s.config.assignmentScope === 'kv-prod';
+        },
+      },
+      {
+        id: 'deny-owner',
+        label: 'A deny assignment blocked an Owner',
+        check: (state) => {
+          const s = state as RbacState;
+          return s.deniedBy === 'deny-assignment' && s.config.role === 'owner';
+        },
+      },
+    ],
+  },
+};
+
 export const content: ConceptContentModule = {
   lessons: {
     'authorization-models': authorizationModels,
@@ -732,6 +861,12 @@ export const content: ConceptContentModule = {
     'aws-iam-policies': awsIamPolicies,
     'authorization-comparison': authorizationComparison,
   },
-  labs: {},
-  simulations: {},
+  labs: {
+    'iam-policy-evaluation-lab': policyEvaluationLab,
+    'azure-rbac-scope-lab': rbacScopeLab,
+  },
+  simulations: {
+    'iam-policy-evaluation-lab': bindSimulation(policyEvaluationSimulation, renderPolicyEvaluationState),
+    'azure-rbac-scope-lab': bindSimulation(rbacScopeSimulation, renderRbacScopeState),
+  },
 };

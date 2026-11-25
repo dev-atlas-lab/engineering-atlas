@@ -1,4 +1,4 @@
-import type { ConceptContentModule, LessonBody } from '../../types';
+import type { ConceptContentModule, LabBody, LessonBody } from '../../types';
 import { accessLifecycleScene, oidcSsoScene } from './identity-and-authentication.scenes';
 
 const iamFundamentals: LessonBody = {
@@ -701,6 +701,98 @@ const identityComparison: LessonBody = {
   ],
 };
 
+// A teaching token: the signature segment is the base64url text
+// "EXAMPLE-SIGNATURE-NOT-VALID", so it can never verify against any key.
+const exampleToken =
+  'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsImtpZCI6ImV4YW1wbGUta2V5LTEifQ.eyJpc3MiOiJodHRwczovL2xvZ2luLmV4YW1wbGUuY29tLzdmMmMxZDllL3YyLjAiLCJzdWIiOiJhMWIyYzNkNC0wMDAwLTQwMDAtODAwMC0wMDAwMDAwMDAwMDEiLCJhdWQiOiJhcGk6Ly9vcmRlcnMtYXBpIiwiaWF0IjoxNzY3MjI1NjAwLCJuYmYiOjE3NjcyMjU2MDAsImV4cCI6MTc2NzIyOTIwMCwibmFtZSI6IkV4YW1wbGUgVXNlciIsInJvbGVzIjpbIk9yZGVycy5SZWFkIl19.RVhBTVBMRS1TSUdOQVRVUkUtTk9ULVZBTElE';
+
+const inspectTokenLab: LabBody = {
+  difficulty: 'beginner',
+  estimatedTime: '15 minutes',
+  description:
+    'Decode a sample JSON Web Token on your own machine, read its claims, and see for yourself why decoding a token is not the same as trusting it. You run every command; the page runs nothing and cannot check your results. The token is a teaching example with an invalid signature — never paste real tokens into tools you do not control.',
+  learningObjectives: [
+    'Decode the header and payload of a JWT and interpret its standard claims',
+    'Explain why a service must verify the signature, issuer, audience, and expiry before trusting a token',
+  ],
+  prerequisites: [
+    { type: 'concept', id: 'how-authentication-works', label: 'How Authentication Works', description: 'Tokens, claims, and bearer-token risks.' },
+    { type: 'tool', label: 'A terminal: bash (Linux, macOS, Git Bash) or PowerShell', description: 'Uses only built-in tools: cut, tr, and base64, or .NET methods from PowerShell.' },
+  ],
+  content: {
+    environment: [
+      { tool: 'bash with base64 (Linux, macOS, or Git Bash on Windows)', installUrl: 'https://git-scm.com/downloads', verifyCommand: 'echo aGVsbG8= | base64 -d' },
+      { tool: 'PowerShell (alternative)', installUrl: 'https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell', verifyCommand: '$PSVersionTable.PSVersion' },
+    ],
+    starterFiles: [
+      {
+        filename: 'token.txt',
+        content: exampleToken,
+        description: 'Save this single line as token.txt in an empty folder. It is a teaching example: the issuer is a documentation domain and the signature is deliberately invalid.',
+      },
+    ],
+    tasks: [
+      {
+        id: 'payload',
+        title: 'Decode the payload',
+        instructions:
+          'A JWT is three base64url segments separated by dots. Take the second segment, convert base64url to standard base64 (- becomes +, _ becomes /, then pad with = to a multiple of four characters), and decode it.',
+        commands: [
+          {
+            command: 'payload=$(cut -d. -f2 token.txt | tr \'_-\' \'/+\'); while [ $(( ${#payload} % 4 )) -ne 0 ]; do payload="$payload="; done; echo "$payload" | base64 -d',
+            platform: 'bash',
+            description: 'Decode the payload in bash.',
+            expectedOutput: '{"iss":"https://login.example.com/7f2c1d9e/v2.0","sub":"a1b2c3d4-…","aud":"api://orders-api","iat":1767225600,"nbf":1767225600,"exp":1767229200,"name":"Example User","roles":["Orders.Read"]}',
+          },
+          {
+            command: "$p = (Get-Content token.txt).Split('.')[1].Replace('-','+').Replace('_','/'); $p = $p.PadRight($p.Length + (4 - $p.Length % 4) % 4, '='); [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($p))",
+            platform: 'powershell',
+            description: 'The same in PowerShell.',
+            expectedOutput: 'The same JSON payload.',
+          },
+        ],
+        hints: ['If base64 reports invalid input, check that you took the second segment and padded it to a multiple of four characters.'],
+        validationChecklist: ['You can see the iss, sub, aud, iat, nbf, and exp claims', 'You identified the audience as api://orders-api'],
+      },
+      {
+        id: 'claims',
+        title: 'Interpret the claims',
+        instructions:
+          'Convert iat and exp from Unix time to dates and work out the token’s lifetime. Then answer: which API should accept this token, and what would a different API have to do if it received it?',
+        commands: [
+          { command: 'date -u -d @1767229200', platform: 'bash', description: 'Convert exp to a UTC date (GNU date; on macOS use date -u -r 1767229200).', expectedOutput: 'Thu Jan  1 01:00:00 UTC 2026' },
+          { command: '[DateTimeOffset]::FromUnixTimeSeconds(1767229200).UtcDateTime', platform: 'powershell', description: 'The same in PowerShell.', expectedOutput: 'Thursday, January 1, 2026 1:00:00 AM' },
+        ],
+        hints: ['iat is 1767225600 — exactly one hour before exp.', 'A different API must reject the token because the aud claim does not name it.'],
+        validationChecklist: ['You found a one-hour lifetime (issued 00:00 UTC, expires 01:00 UTC on 1 January 2026)', 'You can explain why an API must reject a token whose audience is not itself'],
+      },
+      {
+        id: 'header',
+        title: 'Decoding is not verifying',
+        instructions:
+          'Decode the first segment (the header) the same way. It names the algorithm (RS256) and a key ID (kid). Then consider: you could edit the payload — change roles to ["Orders.Admin"] — and re-encode it with no key at all. What stops an API from accepting that edited token?',
+        commands: [
+          {
+            command: 'header=$(cut -d. -f1 token.txt | tr \'_-\' \'/+\'); while [ $(( ${#header} % 4 )) -ne 0 ]; do header="$header="; done; echo "$header" | base64 -d',
+            platform: 'bash',
+            description: 'Decode the header.',
+            expectedOutput: '{"alg":"RS256","typ":"JWT","kid":"example-key-1"}',
+          },
+        ],
+        hints: [
+          'The receiver fetches the issuer’s public keys (published at the issuer’s metadata endpoint), selects the one matching kid, and verifies the signature over the header and payload. An edited payload no longer matches its signature.',
+          'This sample’s signature is deliberately invalid, so it would fail verification even unedited.',
+        ],
+        validationChecklist: [
+          'You can explain that anyone can read a JWT’s claims without a key',
+          'You can explain that only signature verification (plus issuer, audience, and expiry checks) makes the claims trustworthy',
+        ],
+      },
+    ],
+    cleanupInstructions: 'Delete token.txt. Never paste real access tokens into online decoders: a valid bearer token is a live credential until it expires.',
+  },
+};
+
 export const content: ConceptContentModule = {
   lessons: {
     'iam-fundamentals': iamFundamentals,
@@ -710,6 +802,8 @@ export const content: ConceptContentModule = {
     'aws-iam-identities': awsIamIdentities,
     'identity-comparison': identityComparison,
   },
-  labs: {},
+  labs: {
+    'inspect-a-token-lab': inspectTokenLab,
+  },
   simulations: {},
 };

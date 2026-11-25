@@ -26,6 +26,9 @@ export const identityAndAuthentication: ConceptMeta = {
     { id: 'aws-iam-identities', title: 'AWS IAM Identities and IAM Identity Center', kind: 'provider', providerId: 'aws' },
     { id: 'identity-comparison', title: 'Comparison: Entra ID vs. AWS IAM and IAM Identity Center', kind: 'comparison' },
   ],
+  labs: [
+    { id: 'inspect-a-token-lab', title: 'Inspect a Token Locally', type: 'hands-on' },
+  ],
 };
 
 export const authorizationAndPolicies: ConceptMeta = {
@@ -51,6 +54,10 @@ export const authorizationAndPolicies: ConceptMeta = {
     { id: 'azure-rbac', title: 'Azure RBAC: Roles, Assignments, and Scopes', kind: 'provider', providerId: 'azure' },
     { id: 'aws-iam-policies', title: 'AWS IAM Policies and Policy Evaluation', kind: 'provider', providerId: 'aws' },
     { id: 'authorization-comparison', title: 'Comparison: Azure RBAC vs. AWS IAM', kind: 'comparison' },
+  ],
+  labs: [
+    { id: 'iam-policy-evaluation-lab', title: 'IAM Policy Evaluation Simulator', type: 'simulation' },
+    { id: 'azure-rbac-scope-lab', title: 'Azure RBAC Scope Explorer', type: 'simulation' },
   ],
 };
 
