@@ -13,7 +13,8 @@ The exit criteria for M2/M3/M4 below should now be read as the cumulative exit c
 | Slice | Categories | Status |
 |---|---|---|
 | 1 | Platform foundation, Compute | Merged |
-| 2A | Global Infrastructure, Storage, Networking; concept status labels | In review |
+| 2A | Global Infrastructure, Storage, Networking; concept status labels | Merged |
+| 2A.1 | Per-concept content lazy loading (ADR-007); no new content | In review |
 | 2B and later | Remaining six categories | Not started |
 
 Concept-level coverage is tracked in `docs/CLOUD_FUNDAMENTALS_CURRICULUM.md`.

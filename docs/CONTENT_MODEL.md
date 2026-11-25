@@ -225,21 +225,45 @@ ProviderImplementation ──N:1──> Provider
 
 ## Content Indexing
 
-All content is statically defined and bundled at build time. There is no content API or CMS. Content is imported as TypeScript modules or MDX files, enabling:
+All content is statically defined and bundled at build time. There is no content API or CMS. Content is authored as TypeScript modules, which gives:
 
 - Type-safe content references.
-- Build-time validation of relationships (no broken links).
-- Tree-shaking of unused content.
-- Fast navigation without network requests.
+- Test-time validation of relationships (no broken links).
+- Per-concept chunks: a concept's lesson bodies download only when one of its pages is opened. After that, navigation within the concept makes no further requests.
 
 ---
 
-## Implementation Rules (as of Slice 2A)
+## Metadata and Content Split (as of Slice 2A.1)
 
-These rules are enforced by `src/content/cloud-fundamentals/index.test.ts`:
+Each concept is described in two places (see `docs/decisions/ADR-007-per-concept-content-loading.md`):
+
+| | Metadata (eager) | Content (lazy) |
+|---|---|---|
+| Files | `<category>/meta.ts`, collected by `<category>/index.ts` and the domain `index.ts` | `<category>/<concept>.ts`, plus `<concept>.scenes.ts` and simulation views |
+| Types | `ConceptMeta`, `LessonMeta` (`id`, `title`, `kind`, `providerId?`), `LabMeta` (`id`, `title`, `type`) | `ConceptContentModule`: `lessons: Record<id, LessonBody>`, `labs: Record<id, LabBody>`, `simulations: Record<labId, LabSimulationEntry>` |
+| Used by | Home, domain/category pages, badges, breadcrumbs, lesson nav, prev/next | Lesson and lab bodies, visualizations, knowledge checks, simulations |
+
+- **Metadata owns identity and order.** Titles, kinds, lab types and the order of lessons and labs exist only in metadata. A body never repeats them.
+- **Content is merged with metadata, not trusted on its own.** `conceptContentLoader.load(id)` returns `Lesson = LessonMeta & LessonBody` and `LabDefinition = LabMeta & LabBody` in metadata order. It rejects a module whose lesson or lab ids differ from the metadata (`content-mismatch`).
+- **Metadata files never import content modules,** directly or through a barrel. Pages look up metadata with `findConcept`, `findLessonMeta` and `findLabMeta`, and get bodies only through `useConceptContent`.
+- **One loader entry per concept that has lessons.** Each is an explicit dynamic import in `concept-loaders.ts`. Coming-soon concepts have no entry and no module.
+- **Simulation labs are bound in their own concept module** with `bindSimulation(simulation, renderState)`. A simulation's code therefore ships only in that concept's chunk.
+
+### Adding a concept's content
+
+1. Add a `lessons` (and, if needed, `labs`) outline to its `ConceptMeta` in `<category>/meta.ts`, and set its status.
+2. Create `<category>/<concept>.ts` exporting `content: ConceptContentModule`, with one body per outline id.
+3. Add the concept's entry to `conceptLoaders`.
+
+The tests fail if any of these disagree.
+
+## Implementation Rules (as of Slice 2A.1)
+
+These rules are enforced by `src/content/cloud-fundamentals/index.test.ts` and `concept-loaders.test.ts`:
 
 - **Status is the only availability field.** `ConceptMeta.status` drives every status label in the UI through `src/content/status.ts`. Unknown values are treated as `coming-soon`. See `docs/CLOUD_FUNDAMENTALS_CURRICULUM.md` for the labels and the rules for setting a status.
 - **Lesson and lab IDs are unique across the whole domain**, not just within their concept, because local progress is keyed by bare lesson and lab id.
-- **Every simulation lab is registered** in `src/content/cloud-fundamentals/lab-simulations.tsx` with a simulation whose id matches the lab's `simulationId`, and the registry contains no entries for labs that do not exist.
+- **The eager metadata graph imports no content module,** and `conceptLoaders` has exactly one entry per concept with a lesson outline.
+- **Every simulation lab has a simulation binding** in its own concept's content module. The binding's simulation id must match the lab's `simulationId`.
 - **Sequence visualizations have one state per message plus an initial state**, and every edge references existing nodes.
 - **Challenge solutions only reference decision and option IDs that exist.**

@@ -2,7 +2,7 @@
 
 ## System Overview
 
-Engineering Atlas is a frontend-only single-page application. All content is bundled at build time. All state is local to the browser.
+Engineering Atlas is a frontend-only single-page application. All content is bundled at build time, split into per-concept chunks that load on demand. All state is local to the browser.
 
 ```
 ┌──────────────────────────────────────────────────────┐
@@ -201,17 +201,31 @@ Stores are independent. No store imports another store. Cross-store coordination
 ## Content Pipeline
 
 ```
-Content Source Files (.tsx / .mdx)
+src/content/<domain>/
   │
-  ├── Build-time: Vite bundles content into the app
-  │     ├── TypeScript modules: type-checked, tree-shaken
-  │     └── MDX files: compiled to React components
+  ├── Metadata (eager, in the entry bundle)
+  │     index.ts, */index.ts, */meta.ts
+  │     domains, categories, ConceptMeta, LessonMeta[], LabMeta[]
+  │     → Home, domain/category pages, badges, breadcrumbs, lesson nav
   │
-  └── Runtime: Content loaded via dynamic import
-        └── Code splitting by domain/concept for performance
+  └── Concept content (lazy, one chunk per concept)
+        */<concept>.ts (+ <concept>.scenes.ts, simulation views)
+        lesson bodies, scenes, labs, knowledge checks, simulations
+        → loaded by concept-loaders.ts when a concept, lesson or lab is opened
 ```
 
-No runtime content fetching. No CMS. Content is code.
+Content is code: no CMS, no content API. "Lazy" means a dynamic `import()` of a module bundled at build time from the same origin. Nothing is fetched from anywhere else.
+
+- **Metadata is the single source of truth** for ids, titles, order and status. Content modules hold bodies keyed by id, and the loader checks that both sides list exactly the same ids.
+- **Metadata never imports content.** A test reads the metadata files' source and fails if they import a content module.
+- **Loading:**
+  - `conceptContentLoader` caches each concept once it loads, and concurrent requests share one load. A failure is not cached.
+  - Failures are typed as `ContentLoadError`.
+  - `useConceptContent(conceptId)` turns a load into `loading` / `ready` / `error` state for a page and ignores results for a concept the user has already navigated away from.
+- **Pages:** lesson and lab pages render their heading, breadcrumbs and navigation from metadata straight away, then render the body when it loads. Discovery pages never load concept content.
+- **Recovery:** a failed download offers a full page reload. Chromium caches a failed dynamic import for the life of the page, so retrying in place cannot work.
+
+See `docs/decisions/ADR-007-per-concept-content-loading.md`.
 
 ---
 
@@ -232,7 +246,7 @@ No runtime content fetching. No CMS. Content is code.
 
 ## Performance Considerations
 
-- **Code splitting:** Each domain and its concepts are lazy-loaded.
+- **Code splitting:** Page components are lazy routes. Each concept's learning content is its own chunk, loaded on demand (ADR-007). Domain and category metadata stays in the entry bundle because every page reads it synchronously.
 - **Visualization lazy loading:** Heavy visualization libraries (D3, React Flow) are loaded only when needed.
 - **Static content:** No API calls. Navigation is instant after initial load.
 - **Asset optimization:** SVG for diagrams (scalable, small). Raster images only when necessary.
