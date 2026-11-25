@@ -63,7 +63,7 @@ export function TimelineController({
         className="min-w-24 flex-1 accent-accent"
       />
 
-      <span className="shrink-0 text-[12px] text-text-secondary">
+      <span className="min-w-0 break-words text-[12px] text-text-secondary">
         Step {stepIndex + 1} of {totalSteps}: &ldquo;{stepLabel}&rdquo;
       </span>
     </div>

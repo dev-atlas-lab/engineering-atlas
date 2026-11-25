@@ -39,6 +39,22 @@ export function HandsOnLabView({ lab, content }: HandsOnLabViewProps) {
         </ul>
       </div>
 
+      {content.starterFiles && content.starterFiles.length > 0 && (
+        <div className="rounded-lg border border-border p-4">
+          <h3 className="text-[13px] font-medium text-text">Starter files</h3>
+          <ul className="mt-2 space-y-3">
+            {content.starterFiles.map((file) => (
+              <li key={file.filename} className="text-[13px] text-text-secondary">
+                <span className="font-mono font-medium text-text">{file.filename}</span> — {file.description}
+                <pre className="mt-1.5 whitespace-pre-wrap rounded-md bg-bg-subtle p-3 font-mono text-[12px] text-text [overflow-wrap:anywhere]">
+                  {file.content}
+                </pre>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {content.tasks.map((task) => {
         const taskProgress = labProgress?.taskProgress[task.id];
         return (
@@ -49,7 +65,7 @@ export function HandsOnLabView({ lab, content }: HandsOnLabViewProps) {
             </p>
 
             {task.commands?.map((cmd) => (
-              <div key={cmd.command} className="mt-2 rounded-md bg-bg-subtle p-3 font-mono text-[12px] text-text">
+              <div key={cmd.command} className="mt-2 rounded-md bg-bg-subtle p-3 font-mono text-[12px] text-text [overflow-wrap:anywhere]">
                 <div>$ {cmd.command}</div>
                 {cmd.expectedOutput && <div className="mt-1 text-text-muted">{cmd.expectedOutput}</div>}
               </div>

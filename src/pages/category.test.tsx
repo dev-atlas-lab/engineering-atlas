@@ -31,7 +31,7 @@ describe('CategoryPage status labels', () => {
     expect(badgeForConcept('Serverless Functions')).toHaveTextContent('Active');
   });
 
-  it.each(['global-infrastructure', 'storage', 'networking', 'security', 'monitoring-and-observability'])(
+  it.each(['global-infrastructure', 'storage', 'networking', 'identity-and-access-management', 'security', 'monitoring-and-observability'])(
     'labels every concept in %s with the label matching its content status',
     (categoryId) => {
       renderAt(`/cloud-fundamentals/${categoryId}`);

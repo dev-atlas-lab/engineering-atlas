@@ -10,6 +10,13 @@ import {
   ShieldCheck,
   MapPin,
   Boxes,
+  UserRound,
+  Fingerprint,
+  KeyRound,
+  ScrollText,
+  BrickWall,
+  LockKeyhole,
+  FolderTree,
   type LucideIcon,
 } from 'lucide-react';
 import type { ScenePrimitive } from './types';
@@ -27,6 +34,13 @@ export const primitiveIcons: Record<ScenePrimitive, LucideIcon> = {
   region: MapPin,
   availabilityZone: Layers3,
   host: Server,
+  user: UserRound,
+  identity: Fingerprint,
+  key: KeyRound,
+  policy: ScrollText,
+  firewall: BrickWall,
+  secret: LockKeyhole,
+  scope: FolderTree,
 };
 
 export const statusDotClass: Record<'active' | 'inactive' | 'error', string> = {

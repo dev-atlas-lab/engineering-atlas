@@ -158,9 +158,21 @@ interface ChallengeDecision {
   id: string;
   question: string;
   type: 'single-choice' | 'multi-choice' | 'design';  // design = open-ended
-  options?: { id: string; label: string; description: string }[];
+  options?: ChallengeOption[];
 }
 
+interface ChallengeOption {
+  id: string;
+  label: string;
+  description: string;
+  // Optional, added in Slice 2B. Shown after evaluation for every selected
+  // option, plus effective options the learner did not select.
+  feedback?: { rating: 'effective' | 'partial' | 'ineffective'; text: string };
+}
+
+// A solution's verdict applies only to its exact decisionValues. When the
+// learner's combination matches no solution, the view says that no authored
+// overall assessment exists, and shows per-option feedback where authored.
 interface ChallengeSolution {
   id: string;
   decisionValues: Record<string, string | string[]>;
