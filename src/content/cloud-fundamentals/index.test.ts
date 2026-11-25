@@ -15,9 +15,16 @@ import type { ChallengeLab, ConceptMeta, LabDefinition, Lesson, SimulationLab } 
 
 const validStatuses = ['available', 'in-development', 'coming-soon'];
 
-// Categories whose concepts are fully authored. Every concept in these is
-// expected to be Active; every concept elsewhere is expected to be Coming soon.
-const ACTIVE_CATEGORIES = ['compute', 'global-infrastructure', 'storage', 'networking'];
+// Concepts whose content is fully authored. Each is expected to be Active;
+// every other concept is expected to be Coming soon. A status change must be
+// a deliberate edit here, never a side effect.
+const ACTIVE_CONCEPTS = [
+  'regions-and-availability-zones', 'data-centers-and-edge-locations', 'geographic-redundancy-and-data-residency',
+  'virtual-machines', 'containers', 'serverless-functions',
+  'block-storage', 'object-storage', 'file-storage',
+  'virtual-networks', 'subnets-and-routing', 'connecting-networks', 'dns-and-content-delivery',
+  'identity-and-authentication', 'authorization-and-policies',
+];
 
 // Concept ids are route segments; changing one breaks links and progress.
 const EXPECTED_CONCEPT_IDS = [
@@ -63,12 +70,10 @@ describe('Cloud Fundamentals metadata index — structure', () => {
     expect(new Set(conceptIds).size).toBe(conceptIds.length);
   });
 
-  it('only the authored categories are Active — every other concept stays Coming soon', () => {
-    for (const category of cloudFundamentals.categories) {
-      for (const concept of category.concepts) {
-        const expected = ACTIVE_CATEGORIES.includes(category.id) ? 'available' : 'coming-soon';
-        expect({ id: concept.id, status: concept.status }).toEqual({ id: concept.id, status: expected });
-      }
+  it('only the authored concepts are Active — every other concept stays Coming soon', () => {
+    for (const concept of allConcepts) {
+      const expected = ACTIVE_CONCEPTS.includes(concept.id) ? 'available' : 'coming-soon';
+      expect({ id: concept.id, status: concept.status }).toEqual({ id: concept.id, status: expected });
     }
   });
 
@@ -117,7 +122,7 @@ describe('metadata/content boundary', () => {
 
   it('the eager index graph imports only metadata modules — never a concept content module', () => {
     expect(Object.keys(eagerSources).length).toBeGreaterThan(10);
-    const allowed = /^(\.\.\/types|\.\.\/\.\.\/types|\.\/meta|\.\/categories\/[\w-]+|\.\/(compute|global-infrastructure|storage|networking))$/;
+    const allowed = /^(\.\.\/types|\.\.\/\.\.\/types|\.\/meta|\.\/categories\/[\w-]+|\.\/(compute|global-infrastructure|storage|networking|identity-and-access-management|security))$/;
     const offenders: string[] = [];
     for (const [file, source] of Object.entries(eagerSources)) {
       for (const [, specifier] of source.matchAll(/from '([^']+)'/g)) {

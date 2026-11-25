@@ -23,6 +23,8 @@ export const conceptLoaders: Record<string, ConceptModuleLoader> = {
   'subnets-and-routing': () => import('./networking/subnets-and-routing'),
   'connecting-networks': () => import('./networking/connecting-networks'),
   'dns-and-content-delivery': () => import('./networking/dns-and-content-delivery'),
+  'identity-and-authentication': () => import('./identity-and-access-management/identity-and-authentication'),
+  'authorization-and-policies': () => import('./identity-and-access-management/authorization-and-policies'),
 };
 
 /** A concept's metadata merged with its lazily loaded bodies, in metadata order. */

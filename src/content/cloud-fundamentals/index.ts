@@ -7,7 +7,7 @@ import { globalInfrastructure } from './global-infrastructure';
 import { compute } from './compute';
 import { storage } from './storage';
 import { networking } from './networking';
-import { identityAndAccessManagement } from './categories/identity-and-access-management';
+import { identityAndAccessManagement } from './identity-and-access-management';
 import { security } from './categories/security';
 import { loadBalancing } from './categories/load-balancing';
 import { scalabilityAndReliability } from './categories/scalability-and-reliability';

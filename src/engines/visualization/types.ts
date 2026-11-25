@@ -16,7 +16,14 @@ export type ScenePrimitive =
   | 'gateway'
   | 'region'
   | 'availabilityZone'
-  | 'host';
+  | 'host'
+  | 'user'
+  | 'identity'
+  | 'key'
+  | 'policy'
+  | 'firewall'
+  | 'secret'
+  | 'scope';
 
 export interface SceneNode {
   id: string;
