@@ -27,6 +27,7 @@ const ACTIVE_CONCEPTS = [
   'security-fundamentals', 'encryption-and-key-management', 'network-security', 'security-monitoring-and-compliance',
   'load-balancing-fundamentals', 'application-load-balancing', 'network-load-balancing', 'global-traffic-distribution',
   'auto-scaling', 'high-availability',
+  'observability-fundamentals', 'metrics-and-alerting', 'logging', 'distributed-tracing',
 ];
 
 // Concept ids are route segments; changing one breaks links and progress.
@@ -125,7 +126,7 @@ describe('metadata/content boundary', () => {
 
   it('the eager index graph imports only metadata modules — never a concept content module', () => {
     expect(Object.keys(eagerSources).length).toBeGreaterThan(10);
-    const allowed = /^(\.\.\/types|\.\.\/\.\.\/types|\.\/meta|\.\/categories\/[\w-]+|\.\/(compute|global-infrastructure|storage|networking|identity-and-access-management|security|load-balancing|scalability-and-reliability))$/;
+    const allowed = /^(\.\.\/types|\.\.\/\.\.\/types|\.\/meta|\.\/categories\/[\w-]+|\.\/(compute|global-infrastructure|storage|networking|identity-and-access-management|security|load-balancing|scalability-and-reliability|monitoring-and-observability))$/;
     const offenders: string[] = [];
     for (const [file, source] of Object.entries(eagerSources)) {
       for (const [, specifier] of source.matchAll(/from '([^']+)'/g)) {

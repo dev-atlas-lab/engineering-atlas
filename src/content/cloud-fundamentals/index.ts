@@ -11,7 +11,7 @@ import { identityAndAccessManagement } from './identity-and-access-management';
 import { security } from './security';
 import { loadBalancing } from './load-balancing';
 import { scalabilityAndReliability } from './scalability-and-reliability';
-import { monitoringAndObservability } from './categories/monitoring-and-observability';
+import { monitoringAndObservability } from './monitoring-and-observability';
 
 export type { ConceptStatus, Domain, Category, ConceptMeta, LessonMeta, LabMeta } from '../types';
 
