@@ -30,6 +30,12 @@ export const conceptLoaders: Record<string, ConceptModuleLoader> = {
   'encryption-and-key-management': () => import('./security/encryption-and-key-management'),
   'network-security': () => import('./security/network-security'),
   'security-monitoring-and-compliance': () => import('./security/security-monitoring-and-compliance'),
+  'load-balancing-fundamentals': () => import('./load-balancing/load-balancing-fundamentals'),
+  'application-load-balancing': () => import('./load-balancing/application-load-balancing'),
+  'network-load-balancing': () => import('./load-balancing/network-load-balancing'),
+  'global-traffic-distribution': () => import('./load-balancing/global-traffic-distribution'),
+  'auto-scaling': () => import('./scalability-and-reliability/auto-scaling'),
+  'high-availability': () => import('./scalability-and-reliability/high-availability'),
 };
 
 /** A concept's metadata merged with its lazily loaded bodies, in metadata order. */

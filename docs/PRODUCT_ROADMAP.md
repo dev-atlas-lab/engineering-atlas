@@ -16,8 +16,9 @@ The exit criteria for M2/M3/M4 below should now be read as the cumulative exit c
 | 2A | Global Infrastructure, Storage, Networking; concept status labels | Merged |
 | 2A.1 | Per-concept content lazy loading (ADR-007); no new content | Merged |
 | 2B | Identity and Access Management, Security | Merged |
-| Viz | SVG-first visualization system (ADR-008); no new content | In review |
-| 2C and later | Remaining four categories | Not started |
+| Viz | SVG-first visualization system (ADR-008); no new content | Merged |
+| 2C | Load Balancing; Scalability and Reliability (Auto-Scaling, High Availability) | In review |
+| 2D and later | Cloud Computing Models, Monitoring and Observability, Disaster Recovery | Not started |
 
 The visualization phase is cross-cutting, not a content slice: it makes declarative SVG the default scene renderer, adds reusable SVG primitives and a documented standard (`docs/SVG_VISUALIZATION_STANDARD.md`), and moves React Flow off the eager lesson path. It adds no concepts, lessons, routes, or status changes.
 
