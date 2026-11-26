@@ -27,7 +27,7 @@ function MetricBar({ tick, target }: { tick: Tick; target: number }) {
   const targetX = Math.round((target / 100) * BAR_W);
   const over = tick.overloaded;
   return (
-    <svg viewBox={`0 0 ${BAR_W + 60} 26`} width={BAR_W + 60} height={26} className="min-w-full" role="group" aria-label={`Metric ${Math.min(tick.metric, 100)} percent, target ${target} percent`}>
+    <svg viewBox={`0 0 ${BAR_W + 60} 26`} width="100%" height={26} preserveAspectRatio="xMinYMid meet" className="block" role="group" aria-label={`Metric ${Math.min(tick.metric, 100)} percent, target ${target} percent`}>
       <title>Observed metric against target</title>
       <rect x={0} y={6} width={BAR_W} height={12} rx={3} className="fill-bg-muted" />
       <rect x={0} y={6} width={w} height={12} rx={3} className={over ? 'fill-error' : tick.metric > target ? 'fill-warning' : 'fill-success'} />
