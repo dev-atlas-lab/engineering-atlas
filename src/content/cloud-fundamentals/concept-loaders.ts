@@ -36,6 +36,10 @@ export const conceptLoaders: Record<string, ConceptModuleLoader> = {
   'global-traffic-distribution': () => import('./load-balancing/global-traffic-distribution'),
   'auto-scaling': () => import('./scalability-and-reliability/auto-scaling'),
   'high-availability': () => import('./scalability-and-reliability/high-availability'),
+  'observability-fundamentals': () => import('./monitoring-and-observability/observability-fundamentals'),
+  'metrics-and-alerting': () => import('./monitoring-and-observability/metrics-and-alerting'),
+  logging: () => import('./monitoring-and-observability/logging'),
+  'distributed-tracing': () => import('./monitoring-and-observability/distributed-tracing'),
 };
 
 /** A concept's metadata merged with its lazily loaded bodies, in metadata order. */

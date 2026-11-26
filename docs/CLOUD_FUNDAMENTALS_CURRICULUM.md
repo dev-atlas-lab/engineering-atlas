@@ -1,6 +1,6 @@
 # Cloud Fundamentals — Curriculum Coverage
 
-This document records what the Cloud Fundamentals domain actually contains, what remains, and the rules that decide how content is labelled. It reflects the code at the end of Slice 2C; update it whenever a concept's content or status changes.
+This document records what the Cloud Fundamentals domain actually contains, what remains, and the rules that decide how content is labelled. It reflects the code at the end of Slice 2D; update it whenever a concept's content or status changes.
 
 ---
 
@@ -19,13 +19,13 @@ The domain has 10 categories and 34 concepts. A concept is **Active** only when 
 | Security | Security Fundamentals · Encryption and Key Management · Network Security · Security Monitoring and Compliance | **Active** | 2B |
 | Load Balancing | Load Balancing Fundamentals · Application Load Balancing · Network Load Balancing · Global Traffic Distribution | **Active** | 2C |
 | Scalability and Reliability | Auto-Scaling · High Availability · **Disaster Recovery (Coming soon)** | **Active** | 2C |
-| Monitoring and Observability | Observability Fundamentals · Metrics and Alerting · Logging · Distributed Tracing | Coming soon | — |
+| Monitoring and Observability | Observability Fundamentals · Metrics and Alerting · Logging · Distributed Tracing | **Active** | 2D |
 
-**Totals:** 26 Active concepts, 8 Coming soon, 0 In development. No status of an earlier concept changed in Slice 2C.
+**Totals:** 30 Active concepts, 4 Coming soon, 0 In development. No status of an earlier concept changed in Slice 2D.
 
 ### Remaining gaps
 
-- Two categories (7 concepts) have no lessons yet: Cloud Computing Models and Monitoring and Observability. Within Scalability and Reliability, Disaster Recovery stays Coming soon — it is a distinct topic (backup, replication, catastrophic recovery) outside the Slice 2C load-balancing-and-scalability scope.
+- One category (3 concepts) has no lessons yet: Cloud Computing Models. Within Scalability and Reliability, Disaster Recovery stays Coming soon — it is a distinct topic (backup, replication, catastrophic recovery) outside the Slice 2C load-balancing-and-scalability scope.
 - Security Fundamentals maps to providers through a comparison lesson only, because it teaches principles that every other security concept implements with provider services.
 - Serverless Functions (Slice 1) has no lab; Data Centers and Edge Locations has no lab. Both are Active, because a lab is optional where a concept does not naturally support one.
 - Data Centers and Edge Locations maps to providers through a comparison lesson rather than separate Azure and AWS lessons, because the concept is about where provider services run rather than one service per provider.
@@ -116,6 +116,23 @@ Disaster Recovery remains Coming soon; RTO/RPO and cross-region failover are int
 
 ---
 
+## Slice 2D inventory
+
+26 lessons, 34 knowledge-check questions, 5 labs, 3 scene visualizations (plus 5 simulation views), and 5 simulations across the 4 Monitoring and Observability concepts.
+
+### Monitoring and Observability
+
+| Concept | Lessons | Visualization | Lab |
+|---|---|---|---|
+| Observability Fundamentals | Monitoring vs. Observability (C) · Golden Signals, SLIs, SLOs, and SLAs (C) · Observability Dashboards (C) · Incident Investigation and RCA (C) · The Azure Monitor Suite (P) · Amazon CloudWatch and X-Ray (P) · Comparison (X) | Three signals in an investigation (topology); cross-signal incident board (simulation view) | End-to-End Incident Investigation (simulation) |
+| Metrics and Alerting | Metrics Fundamentals (C) · The Golden Signals, RED, and USE (C) · Aggregation and Time Windows (C) · Alerting Fundamentals (C) · Azure Monitor Metrics and Alerts (P) · CloudWatch Metrics and Alarms (P) · Comparison (X) | Golden-signal metrics timeline (simulation view); alert lifecycle (simulation view) | Diagnose a Latency Spike (simulation) · Configure an Alerting Policy (simulation) |
+| Logging | Logging Fundamentals (C) · Correlation IDs and Trace IDs (C) · Centralized Logging Architecture (C) · Azure Monitor Logs and Log Analytics (P) · Amazon CloudWatch Logs (P) · Comparison (X) | Centralized logging pipeline (topology); structured-log investigation table (simulation view) | Find a Failed Request Using Structured Logs (simulation) |
+| Distributed Tracing | Why Distributed Tracing (C) · Traces, Spans, and Context (C) · Sampling and OpenTelemetry (C) · Azure Application Insights (P) · AWS X-Ray (P) · Comparison (X) | Trace context propagation (sequence); distributed trace waterfall (simulation view) | Investigate a Slow Distributed Request (simulation) |
+
+The five brief visualizations map onto these concepts: the metrics timeline and alert lifecycle live in Metrics and Alerting; the logging pipeline and the structured-log investigation in Logging; the trace waterfall in Distributed Tracing; and the cross-signal incident board in Observability Fundamentals. Logs render as an HTML table rather than SVG, which is the correct model for row-structured records (per the SVG-first standard's rendering-model guidance). Observability Fundamentals is the frame concept: it introduces the three signals and the alert → metrics → logs → trace → root-cause workflow that the other three concepts each deepen, and it does not repeat their provider detail — its two provider lessons are suite maps that point at the per-signal concepts.
+
+---
+
 ## Status labels
 
 ### Source of truth
@@ -163,6 +180,9 @@ Labels deliberately do **not** appear in the domain sidebar, which stops at cate
 | Public vs. private explorer | Topology | Public vs. Private Access |
 | Hub-and-spoke connectivity | Topology | Peering and Hub-and-Spoke Topologies |
 | DNS resolution | Sequence | How DNS Resolution Works |
+| Three signals in an investigation | Topology | Monitoring vs. Observability |
+| Centralized logging pipeline | Topology | Centralized Logging Architecture |
+| Trace context propagation | Sequence | Traces, Spans, and Context |
 
 | Simulation | What it computes |
 |---|---|
@@ -181,6 +201,11 @@ Labels deliberately do **not** appear in the domain sidebar, which stops at cate
 | Health Check | Runs active probes against a backend and applies unhealthy/healthy thresholds to decide when it leaves and rejoins rotation. |
 | Regional Failover | Routes global clients by policy, fails a region, and contrasts DNS cache delay (TTL) with immediate anycast reroute, tracking healthy capacity. |
 | Auto Scaling | Runs a horizontal scaling loop over a spike, ramp, or daily curve: observe a metric, apply a policy, change capacity, warm up, and cool down. |
+| Metrics Timeline | Reveals four correlated golden-signal series (throughput, latency p95, errors, saturation) over 12 ticks around an incident, for three scenarios, and checks a diagnosis against the correlation. |
+| Alert Lifecycle | Evaluates a latency metric against a static or dynamic threshold over 12 ticks with an evaluation window, moving through insufficient-data → ok → pending → firing → resolved; shows alert fatigue and anomaly-band drift. |
+| Log Investigation | Steps a fixed structured-log dataset through filter pivots (all → errors → correlation ID → root) to reassemble one failed request across services and identify the first failure. |
+| Trace Waterfall | Reveals the spans of a distributed trace (start, duration, parent/child, status) top-down for three scenarios, computes the critical path, and checks which service is at fault. |
+| Incident Investigation | A guided 5-stage cross-signal walkthrough (alert → metrics → logs → trace → root cause) that correlates the three signals and checks the learner's root-cause conclusion. |
 
 Every simulation is a pure function of its parameters. The same input always produces the same steps and outcome, and each is covered by unit tests.
 
@@ -194,6 +219,18 @@ The Load Balancing and Scalability simulations are deterministic teaching models
 - **Auto Scaling** uses whole-instance capacity, one metric, a one-tick warm-up, and a short cooldown over a fixed load timeline. Real provider policy maths, metrics, and billing are not modelled; predictive scaling is described in the lessons but not simulated.
 
 These simulations do not reproduce the internal behaviour of any Azure or AWS managed service.
+
+### Simulation semantics and limits (Slice 2D)
+
+The Monitoring and Observability simulations are deterministic teaching models with fixed, illustrative data. Each lab and view states that it is not a real monitoring backend.
+
+- **Metrics Timeline** uses hand-authored per-scenario series, not generated or measured data. The values are chosen to make the golden-signal correlation legible (for example errors leading latency with flat saturation for a dependency failure); they are not real latencies or error rates.
+- **Alert Lifecycle** uses one latency series per scenario. The dynamic threshold is a simple baseline model — the mean of the first five ticks plus three standard deviations, with a floor — chosen to illustrate anomaly detection, not to reproduce Azure dynamic thresholds or CloudWatch anomaly bands, which use proprietary models. The evaluation window models consecutive breaching periods; CloudWatch M-of-N (non-consecutive) is described in the lessons but not simulated.
+- **Log Investigation** uses a fixed set of interleaved log lines and renders them as an HTML table. Filtering and the correlation-ID pivot operate on that fixed dataset; there is no query engine, index, or real log store.
+- **Trace Waterfall** uses fixed spans per scenario. The critical path is computed from the spans (following the latest-finishing child from the root); durations are illustrative milliseconds, not measured.
+- **Incident Investigation** is a scripted 5-stage walkthrough with authored findings per stage; it correlates the other signals' stories into one conclusion and does not compute across the other simulations' state.
+
+These simulations do not reproduce the internal behaviour of any Azure or AWS managed service, and no telemetry is collected, sent, or stored.
 
 ### Simulation semantics and limits (Slice 2B)
 
@@ -243,6 +280,10 @@ The security simulations are teaching models with stated scope. Each lab and sim
 | Route Around a Regional Outage | Simulation | A modelled global routing layer. It contrasts DNS and anycast failover; it is not real DNS, and no endpoint is contacted. |
 | Design an Auto Scaling Policy | Simulation | A modelled scaling loop over a fixed load timeline. No instances are launched; timings are illustrative. |
 | Design a Highly Available Application | Architecture challenge | Choices are matched against authored assessments with per-option feedback; unlisted combinations get per-choice feedback and no overall verdict. Nothing is deployed. |
+| Diagnose a Latency Spike · Configure an Alerting Policy | Simulation | Deterministic models of golden-signal correlation and alert evaluation in the browser. No metrics are collected and no alert rule is deployed. Validation checks the simulated outcome. |
+| Find a Failed Request Using Structured Logs | Simulation | A fixed structured-log dataset filtered and pivoted in the browser. No log store is queried. Validation checks that the correct root-cause service is reached. |
+| Investigate a Slow Distributed Request | Simulation | A fixed distributed trace revealed as a waterfall. No tracing backend is contacted. Validation checks the diagnosed at-fault service. |
+| End-to-End Incident Investigation | Simulation | A guided cross-signal walkthrough over fixed data. No monitoring backend is involved. Validation checks that the learner works every stage and reaches the correct root cause. |
 
 The lab instructions and descriptions say this explicitly.
 
@@ -275,6 +316,10 @@ These mappings are conceptual. Several are only partial, and the lessons call th
 - **DNS vs anycast failover:** DNS-based routing (Traffic Manager, Route 53) fails over only as fast as record TTLs; anycast proxies (Front Door, Global Accelerator) reroute in seconds.
 - **Auto-scaling:** Azure VM Scale Sets plus Monitor autoscale, and AWS EC2 Auto Scaling groups. Both offer target/step/scheduled/predictive; Azure leans on per-rule cooldowns, AWS target/step policies use instance warm-up. Azure predictive autoscale is preview, scale-out only, Percentage CPU only.
 - **High availability:** Azure availability zones / zone-redundant services / availability sets, and AWS Availability Zones / Multi-AZ. Patterns match closely; zone redundancy is a per-service, per-SKU property on both.
+- **Observability suite:** Azure Monitor is the umbrella (Azure Monitor Metrics, Log Analytics, Application Insights, alerts via action groups, Workbooks/dashboards/Managed Grafana). AWS splits it across Amazon CloudWatch (metrics, Logs, alarms, dashboards) and AWS X-Ray (tracing). The biggest structural difference: Azure keeps tracing (Application Insights) on the same Log Analytics backend as logs, so app and infra data query together; AWS keeps tracing in a separate service that integrates with CloudWatch.
+- **Metric alerts:** an Azure metric alert rule (static or ML dynamic threshold, sensitivity, failing periods, severity 0–4, routed to an action group) and a CloudWatch alarm (static threshold or anomaly-detection band, M-of-N Datapoints-to-Alarm within Evaluation-Periods, OK/ALARM/INSUFFICIENT_DATA, routed to SNS). Azure has first-class severity; AWS expresses the window as explicit M-of-N datapoints and has a distinct INSUFFICIENT_DATA state.
+- **Log stores and queries:** Azure Log Analytics workspace queried with KQL ↔ CloudWatch Logs log groups/streams queried with Logs Insights. Azure alerts on logs with a KQL log search alert; AWS extracts a metric with a metric filter and alarms on it.
+- **Tracing:** Azure Application Insights (operation_Id is the trace ID, operation_ParentId the parent span) ↔ AWS X-Ray (segments and subsegments, service and trace maps). Both now steer toward OpenTelemetry for collection (OpenTelemetry into Azure Monitor; AWS Distro for OpenTelemetry).
 
 No content quotes SLAs, prices, durability percentages, or service limits beyond the subnet sizes and reserved-address counts below, which were verified.
 
@@ -320,6 +365,20 @@ Slice 2C:
 - Azure predictive autoscale (preview): https://learn.microsoft.com/en-us/azure/azure-monitor/autoscale/autoscale-predictive
 - EC2 Auto Scaling dynamic scaling: https://docs.aws.amazon.com/autoscaling/ec2/userguide/as-scale-based-on-demand.html
 - Azure availability zones: https://learn.microsoft.com/en-us/azure/reliability/availability-zones-overview
+
+Slice 2D:
+
+- Azure Monitor overview: https://learn.microsoft.com/en-us/azure/azure-monitor/overview
+- Azure Monitor alert types (metric, log, dynamic thresholds, action groups): https://learn.microsoft.com/en-us/azure/azure-monitor/alerts/alerts-types
+- Azure Log Analytics overview (KQL): https://learn.microsoft.com/en-us/azure/azure-monitor/logs/log-analytics-overview
+- Azure Application Insights OpenTelemetry and trace/span correlation: https://learn.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview
+- Amazon CloudWatch overview: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/WhatIsCloudWatch.html
+- CloudWatch alarm evaluation (M-of-N, states, anomaly detection): https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/alarm-evaluation.html
+- Amazon CloudWatch Logs: https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/WhatIsCloudWatchLogs.html
+- AWS X-Ray concepts (segments, subsegments, service map): https://docs.aws.amazon.com/xray/latest/devguide/xray-concepts.html
+- W3C Trace Context (traceparent): https://www.w3.org/TR/trace-context/
+
+No Slice 2D content quotes prices, SLAs, or service limits. Alert-severity ranges (Azure 0–4), alarm states (OK/ALARM/INSUFFICIENT_DATA), and the M-of-N evaluation model are documented behaviour, checked against the sources above; no simulation reproduces a provider's proprietary dynamic-threshold or anomaly-detection maths, and the lessons say so.
 
 No Slice 2C content quotes prices, SLAs, scaling limits, or health-check timing guarantees. Provider behaviour that depends on SKU or configuration is described as such (for example Azure predictive autoscale's preview status, NLB client-IP preservation defaults, and Front Door tier-dependent WAF).
 
@@ -400,3 +459,16 @@ All new content follows per-concept loading. Each Load Balancing and Scalability
 | high-availability | 27.0 KB | 8.2 KB |
 
 Simulation views are SVG rendered from the deterministic simulation engine, so they add no visualization dependency; React Flow remains unused on these routes (ADR-008).
+
+### Slice 2D
+
+All new content follows per-concept loading. Each Monitoring and Observability concept is its own chunk, 26.5–40.7 KB raw (8.5–13.5 KB gzip); the largest, Metrics and Alerting, carries two simulators. The eager entry bundle grew only by the four concepts' metadata. Discovery and category pages still download no concept content, and opening one concept loads only its own chunk.
+
+| Concept chunk | Raw | Gzip |
+|---|---|---|
+| observability-fundamentals | 32.3 KB | 10.6 KB |
+| metrics-and-alerting | 40.7 KB | 13.5 KB |
+| logging | 26.5 KB | 8.5 KB |
+| distributed-tracing | 29.0 KB | 9.5 KB |
+
+The metrics timeline, alert lifecycle, trace waterfall, and incident board render as inline SVG from the deterministic simulation engine, and logs render as an HTML table, so none of these routes fetch the React Flow chunk. The three topology/sequence scene lessons use the default SVG scene renderer (ADR-008); React Flow stays unused on every Monitoring and Observability route.
