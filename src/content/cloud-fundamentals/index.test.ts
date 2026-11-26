@@ -26,6 +26,7 @@ const ACTIVE_CONCEPTS = [
   'identity-and-authentication', 'authorization-and-policies', 'workload-and-federated-identity',
   'security-fundamentals', 'encryption-and-key-management', 'network-security', 'security-monitoring-and-compliance',
   'load-balancing-fundamentals', 'application-load-balancing', 'network-load-balancing', 'global-traffic-distribution',
+  'auto-scaling', 'high-availability',
 ];
 
 // Concept ids are route segments; changing one breaks links and progress.
