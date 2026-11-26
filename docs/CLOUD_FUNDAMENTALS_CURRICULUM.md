@@ -1,6 +1,6 @@
 # Cloud Fundamentals — Curriculum Coverage
 
-This document records what the Cloud Fundamentals domain actually contains, what remains, and the rules that decide how content is labelled. It reflects the code at the end of Slice 2B; update it whenever a concept's content or status changes.
+This document records what the Cloud Fundamentals domain actually contains, what remains, and the rules that decide how content is labelled. It reflects the code at the end of Slice 2C; update it whenever a concept's content or status changes.
 
 ---
 
@@ -17,15 +17,15 @@ The domain has 10 categories and 34 concepts. A concept is **Active** only when 
 | Networking | Virtual Networks · Subnets and Routing · Connecting Networks · DNS and Content Delivery | **Active** | 2A |
 | Identity and Access Management | Identity and Authentication · Authorization and Policies · Workload and Federated Identity | **Active** | 2B |
 | Security | Security Fundamentals · Encryption and Key Management · Network Security · Security Monitoring and Compliance | **Active** | 2B |
-| Load Balancing | Load Balancing Fundamentals · Application Load Balancing · Network Load Balancing · Global Traffic Distribution | Coming soon | — |
-| Scalability and Reliability | Auto-Scaling · High Availability · Disaster Recovery | Coming soon | — |
+| Load Balancing | Load Balancing Fundamentals · Application Load Balancing · Network Load Balancing · Global Traffic Distribution | **Active** | 2C |
+| Scalability and Reliability | Auto-Scaling · High Availability · **Disaster Recovery (Coming soon)** | **Active** | 2C |
 | Monitoring and Observability | Observability Fundamentals · Metrics and Alerting · Logging · Distributed Tracing | Coming soon | — |
 
-**Totals:** 20 Active concepts, 14 Coming soon, 0 In development. No status of an earlier concept changed in Slice 2B.
+**Totals:** 26 Active concepts, 8 Coming soon, 0 In development. No status of an earlier concept changed in Slice 2C.
 
 ### Remaining gaps
 
-- Four categories (14 concepts) have no lessons yet: Cloud Computing Models, Load Balancing, Scalability and Reliability, and Monitoring and Observability.
+- Two categories (7 concepts) have no lessons yet: Cloud Computing Models and Monitoring and Observability. Within Scalability and Reliability, Disaster Recovery stays Coming soon — it is a distinct topic (backup, replication, catastrophic recovery) outside the Slice 2C load-balancing-and-scalability scope.
 - Security Fundamentals maps to providers through a comparison lesson only, because it teaches principles that every other security concept implements with provider services.
 - Serverless Functions (Slice 1) has no lab; Data Centers and Edge Locations has no lab. Both are Active, because a lab is optional where a concept does not naturally support one.
 - Data Centers and Edge Locations maps to providers through a comparison lesson rather than separate Azure and AWS lessons, because the concept is about where provider services run rather than one service per provider.
@@ -92,6 +92,30 @@ Network Security builds on Virtual Networks' security-rules lesson and does not 
 
 ---
 
+## Slice 2C inventory
+
+32 lessons, 50 knowledge-check questions, 7 labs, 9 visualizations, and 4 simulations across 6 concepts (Load Balancing's four, plus Auto-Scaling and High Availability).
+
+### Load Balancing
+
+| Concept | Lessons | Visualization | Lab |
+|---|---|---|---|
+| Load Balancing Fundamentals | Why Load Balancing Exists (C) · Distribution Algorithms and Session Affinity (C) · Layer 4 vs Layer 7 (C) · Health Checks and Backend Availability (C) · The Azure Load Balancing Landscape (P) · The AWS Load Balancing Landscape (P) · Comparison (X) | Load balancer overview; Layer 4 vs Layer 7 explorer | Configure Traffic Distribution (simulation) · Recover from Backend Failure (simulation) |
+| Application Load Balancing | How Layer 7 Routing Works (C) · Azure Application Gateway (P) · AWS Application Load Balancer (P) · Comparison (X) | Layer 7 listener-rule routing | — |
+| Network Load Balancing | How Layer 4 Load Balancing Works (C) · Azure Load Balancer (P) · AWS Network Load Balancer (P) · Comparison (X) | Layer 4 flow hashing | — |
+| Global Traffic Distribution | Global vs Regional Routing (C) · Azure Front Door and Traffic Manager (P) · AWS Route 53, Global Accelerator, and CloudFront (P) · Comparison (X) | Global routing (active-active/passive/failover) | Route Around a Regional Outage (simulation) |
+
+### Scalability and Reliability
+
+| Concept | Lessons | Visualization | Lab |
+|---|---|---|---|
+| Auto-Scaling | Vertical vs Horizontal Scaling (C) · How Auto-Scaling Works (C) · Azure VM Scale Sets and Monitor Autoscale (P) · AWS EC2 Auto Scaling (P) · Comparison (X) | Scale up vs out; auto-scaling simulation (SVG) | Design an Auto Scaling Policy (simulation) |
+| High Availability | Eliminating Single Points of Failure (C) · Failover and Availability Architectures (C) · Azure High Availability (P) · AWS High Availability (P) · Comparison (X) | Multi-AZ architecture with zone failure | Design a Highly Available Application (challenge) |
+
+Disaster Recovery remains Coming soon; RTO/RPO and cross-region failover are introduced in High Availability, and a dedicated Disaster Recovery concept is deferred to a later slice.
+
+---
+
 ## Status labels
 
 ### Source of truth
@@ -153,8 +177,23 @@ Labels deliberately do **not** appear in the domain sidebar, which stops at cate
 | Secret Retrieval and Rotation | Follows a database password stored in a secret store, a container image, or source code through startup, rotation, and a leak. |
 | WAF and DDoS Protection | Sends one kind of representative traffic through network-layer DDoS mitigation, HTTP validation, WAF rules, a rate-based rule, and application authorization. |
 | Misconfiguration Response | Applies one risky change and shows how preventive, detective, corrective, and alerting controls respond, with the resulting exposure window. |
+| Traffic Distribution | Distributes requests across a backend pool by round robin, weighted, least connections, or source-IP hash, honouring backend health and weights. |
+| Health Check | Runs active probes against a backend and applies unhealthy/healthy thresholds to decide when it leaves and rejoins rotation. |
+| Regional Failover | Routes global clients by policy, fails a region, and contrasts DNS cache delay (TTL) with immediate anycast reroute, tracking healthy capacity. |
+| Auto Scaling | Runs a horizontal scaling loop over a spike, ramp, or daily curve: observe a metric, apply a policy, change capacity, warm up, and cool down. |
 
 Every simulation is a pure function of its parameters. The same input always produces the same steps and outcome, and each is covered by unit tests.
+
+### Simulation semantics and limits (Slice 2C)
+
+The Load Balancing and Scalability simulations are deterministic teaching models; each lab and view states its scope.
+
+- **Traffic Distribution** assigns whole requests one at a time and does not model real connection lifetimes or in-flight load. An unhealthy backend is removed from rotation.
+- **Health Check** uses a fixed per-scenario up/down timeline and illustrative timings; detection lag approximates the unhealthy threshold times the interval, and recovery lag the healthy threshold times the interval. Real probe timeouts and provider defaults differ.
+- **Regional Failover** uses fixed regions and clients, one TTL window, and illustrative latencies. It models DNS caching vs anycast reroute; it does not reproduce real DNS or health-check timing.
+- **Auto Scaling** uses whole-instance capacity, one metric, a one-tick warm-up, and a short cooldown over a fixed load timeline. Real provider policy maths, metrics, and billing are not modelled; predictive scaling is described in the lessons but not simulated.
+
+These simulations do not reproduce the internal behaviour of any Azure or AWS managed service.
 
 ### Simulation semantics and limits (Slice 2B)
 
@@ -200,6 +239,10 @@ The security simulations are teaching models with stated scope. Each lab and sim
 | WAF and DDoS Protection Simulator · Misconfiguration Response Simulator | Simulation | Conceptual models. No traffic is generated, no rule is deployed, and nothing is tested. |
 | Defense-in-Depth Architecture Review | Architecture challenge | Every option has authored feedback; only three exact combinations have an authored overall verdict. Nothing is deployed. |
 | Inspect a Token Locally | Hands-on | The learner decodes a deliberately invalid sample token with built-in shell tools. The page runs nothing and verifies nothing; completion is self-reported. |
+| Configure Traffic Distribution · Recover from Backend Failure | Simulation | Deterministic models of load balancer distribution and health-check thresholds in the browser. No traffic is generated. Validation checks the simulated outcome. |
+| Route Around a Regional Outage | Simulation | A modelled global routing layer. It contrasts DNS and anycast failover; it is not real DNS, and no endpoint is contacted. |
+| Design an Auto Scaling Policy | Simulation | A modelled scaling loop over a fixed load timeline. No instances are launched; timings are illustrative. |
+| Design a Highly Available Application | Architecture challenge | Choices are matched against authored assessments with per-option feedback; unlisted combinations get per-choice feedback and no overall verdict. Nothing is deployed. |
 
 The lab instructions and descriptions say this explicitly.
 
@@ -226,6 +269,12 @@ These mappings are conceptual. Several are only partial, and the lessons call th
 - **Keys and secrets:** Key Vault combines keys, secrets, and certificates under one RBAC model; AWS splits them across KMS (with mandatory key policies), Secrets Manager, Parameter Store, and ACM. Secrets Manager has built-in rotation; Key Vault secret rotation is event-driven with your own function.
 - **DDoS and WAF:** both include baseline DDoS protection. Azure DDoS Protection is L3/L4 and relies on Azure WAF for L7; AWS Shield Advanced can create WAF rate-based rules automatically.
 - **Governance:** Azure Policy handles both prevention (deny) and detection (audit); AWS splits prevention (SCPs, RCPs, account settings, proactive controls) from detection (AWS Config, Security Hub CSPM).
+- **Layer 4 load balancing:** Azure Load Balancer and AWS Network Load Balancer (both regional L4). NLB adds a native TLS listener; Azure terminates TLS for routing at Layer 7 instead.
+- **Layer 7 load balancing:** Azure Application Gateway and AWS Application Load Balancer (both regional L7 proxies). ALB routes on more conditions; the health check and algorithm live in the AWS target group.
+- **Global routing:** Azure Front Door (global anycast L7 with caching/WAF) and Traffic Manager (DNS) versus AWS CloudFront (CDN), Route 53 (DNS), and Global Accelerator (L4 anycast). Not one-to-one: Global Accelerator's L4 anycast acceleration has no direct Azure equivalent.
+- **DNS vs anycast failover:** DNS-based routing (Traffic Manager, Route 53) fails over only as fast as record TTLs; anycast proxies (Front Door, Global Accelerator) reroute in seconds.
+- **Auto-scaling:** Azure VM Scale Sets plus Monitor autoscale, and AWS EC2 Auto Scaling groups. Both offer target/step/scheduled/predictive; Azure leans on per-rule cooldowns, AWS target/step policies use instance warm-up. Azure predictive autoscale is preview, scale-out only, Percentage CPU only.
+- **High availability:** Azure availability zones / zone-redundant services / availability sets, and AWS Availability Zones / Multi-AZ. Patterns match closely; zone redundancy is a per-service, per-SKU property on both.
 
 No content quotes SLAs, prices, durability percentages, or service limits beyond the subnet sizes and reserved-address counts below, which were verified.
 
@@ -257,6 +306,22 @@ Slice 2B:
 - Azure DDoS Protection tiers: https://learn.microsoft.com/en-us/azure/ddos-protection/ddos-protection-sku-comparison
 - AWS WAF protected resources: https://docs.aws.amazon.com/waf/latest/developerguide/waf-chapter.html
 - AWS Security Hub CSPM: https://aws.amazon.com/security-hub/cspm/
+
+Slice 2C:
+
+- Azure load balancing options: https://learn.microsoft.com/en-us/azure/architecture/guide/technology-choices/load-balancing-overview
+- Azure Load Balancer health probes: https://learn.microsoft.com/en-us/azure/load-balancer/load-balancer-custom-probe-overview
+- AWS Elastic Load Balancing: https://docs.aws.amazon.com/elasticloadbalancing/latest/userguide/what-is-load-balancing.html
+- AWS NLB listeners (TLS/TCP) and client IP: https://docs.aws.amazon.com/elasticloadbalancing/latest/network/load-balancer-listeners.html
+- Azure Traffic Manager routing methods: https://learn.microsoft.com/en-us/azure/traffic-manager/traffic-manager-routing-methods
+- Amazon Route 53 routing policies: https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy.html
+- AWS Global Accelerator vs CloudFront: https://aws.amazon.com/compare/cloudfront-and-global-accelerator/
+- Azure Monitor autoscale overview: https://learn.microsoft.com/en-us/azure/azure-monitor/autoscale/autoscale-overview
+- Azure predictive autoscale (preview): https://learn.microsoft.com/en-us/azure/azure-monitor/autoscale/autoscale-predictive
+- EC2 Auto Scaling dynamic scaling: https://docs.aws.amazon.com/autoscaling/ec2/userguide/as-scale-based-on-demand.html
+- Azure availability zones: https://learn.microsoft.com/en-us/azure/reliability/availability-zones-overview
+
+No Slice 2C content quotes prices, SLAs, scaling limits, or health-check timing guarantees. Provider behaviour that depends on SKU or configuration is described as such (for example Azure predictive autoscale's preview status, NLB client-IP preservation defaults, and Front Door tier-dependent WAF).
 
 No Slice 2B content quotes prices, SLAs, or compliance certifications. The few numeric facts it states (KMS rotation range, Key Vault soft-delete retention, STS session durations, the federated identity credential limit) were checked against the sources above.
 
@@ -320,3 +385,18 @@ Making declarative SVG the default scene renderer and lazy-loading React Flow (A
 | Lab (IAM Policy Evaluation Simulator) | 150.3 KB | 150.3 KB |
 
 Every lesson page drops about 78 KB gzip (~35%); discovery and lab pages are unchanged, because they never rendered a topology scene. A browser run confirmed that opening any scene lesson renders an SVG diagram and never fetches the React Flow chunk.
+
+### Slice 2C
+
+All new content follows per-concept loading. Each Load Balancing and Scalability concept is its own chunk, 13.4-52.1 KB raw (4.2-15.7 KB gzip); the largest, Load Balancing Fundamentals, carries two simulators and two SVG scenes. The eager entry bundle grew about 6.5 KB raw (1.4 KB gzip) for the six concepts' metadata. Discovery and category pages still download no concept content, and opening one concept loads only its own chunk.
+
+| Concept chunk | Raw | Gzip |
+|---|---|---|
+| load-balancing-fundamentals | 52.1 KB | 15.7 KB |
+| application-load-balancing | 13.8 KB | 4.3 KB |
+| network-load-balancing | 13.4 KB | 4.2 KB |
+| global-traffic-distribution | 27.5 KB | 8.8 KB |
+| auto-scaling | 31.4 KB | 10.3 KB |
+| high-availability | 27.0 KB | 8.2 KB |
+
+Simulation views are SVG rendered from the deterministic simulation engine, so they add no visualization dependency; React Flow remains unused on these routes (ADR-008).
