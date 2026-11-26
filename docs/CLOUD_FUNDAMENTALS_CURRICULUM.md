@@ -28,7 +28,7 @@ The domain has 10 categories and 34 concepts. A concept is **Active** only when 
 - One category (3 concepts) has no lessons yet: Cloud Computing Models. Within Scalability and Reliability, Disaster Recovery stays Coming soon — it is a distinct topic (backup, replication, catastrophic recovery) outside the Slice 2C load-balancing-and-scalability scope.
 - Security Fundamentals maps to providers through a comparison lesson only, because it teaches principles that every other security concept implements with provider services.
 - Serverless Functions (Slice 1) has no lab; Data Centers and Edge Locations has no lab. Both are Active, because a lab is optional where a concept does not naturally support one.
-- Data Centers and Edge Locations maps to providers through a comparison lesson rather than separate Azure and AWS lessons, because the concept is about where provider services run rather than one service per provider.
+- Three concepts map to providers through a single comparison lesson rather than separate Azure and AWS provider lessons: Data Centers and Edge Locations (about where provider services run, not one service per provider), Geographic Redundancy and Data Residency (a cross-provider trade-off comparison: Azure region pairs vs. AWS region choice), and Security Fundamentals (noted above). This is a deliberate pattern for conceptual topics, consistent with ADR-002 (provider implementations attach to concepts where a distinct per-provider service exists).
 
 ---
 
