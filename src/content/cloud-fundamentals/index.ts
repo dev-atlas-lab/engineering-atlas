@@ -12,6 +12,7 @@ import { security } from './security';
 import { loadBalancing } from './load-balancing';
 import { scalabilityAndReliability } from './scalability-and-reliability';
 import { monitoringAndObservability } from './monitoring-and-observability';
+import { kubernetesFundamentals } from '../kubernetes-fundamentals';
 
 export type { ConceptStatus, Domain, Category, ConceptMeta, LessonMeta, LabMeta } from '../types';
 
@@ -34,7 +35,7 @@ export const cloudFundamentals: Domain = {
   ],
 };
 
-export const domains: Domain[] = [cloudFundamentals];
+export const domains: Domain[] = [cloudFundamentals, kubernetesFundamentals];
 
 export function findDomain(domainId: string): Domain | undefined {
   return domains.find((d) => d.id === domainId);
