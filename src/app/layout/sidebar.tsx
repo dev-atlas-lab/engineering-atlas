@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router';
 import { X, PanelLeftClose, PanelLeft } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { cloudFundamentals } from '../../content/cloud-fundamentals';
+import { domains } from '../../content/cloud-fundamentals';
 
 export type SidebarMode = 'expanded' | 'rail';
 
@@ -23,7 +23,6 @@ export function Sidebar({ open, onClose, mode, onToggleMode }: SidebarProps) {
   const activeDomainId = pathSegments[0];
   const activeCategoryId = pathSegments[1];
 
-  const domain = cloudFundamentals;
   const isRail = mode === 'rail';
 
   return (
@@ -49,18 +48,7 @@ export function Sidebar({ open, onClose, mode, onToggleMode }: SidebarProps) {
           </button>
         </div>
 
-        <div className="hidden items-center justify-between gap-2 border-b border-border-subtle px-3 py-3 lg:flex">
-          {!isRail && (
-            <Link
-              to={`/${domain.id}`}
-              className={cn(
-                'truncate text-[13px] font-semibold uppercase tracking-wider',
-                activeDomainId === domain.id && !activeCategoryId ? 'text-accent' : 'text-text-muted hover:text-text',
-              )}
-            >
-              {domain.title}
-            </Link>
-          )}
+        <div className="hidden items-center justify-end gap-2 border-b border-border-subtle px-3 py-3 lg:flex">
           <button
             onClick={onToggleMode}
             aria-label={isRail ? 'Expand navigation' : 'Collapse navigation'}
@@ -71,52 +59,60 @@ export function Sidebar({ open, onClose, mode, onToggleMode }: SidebarProps) {
         </div>
 
         <nav aria-label="Domain navigation" className="flex-1 overflow-y-auto px-2 pb-4">
-          <div className="mb-1 px-2 pt-3 lg:hidden">
-            <Link
-              to={`/${domain.id}`}
-              onClick={onClose}
-              className={cn(
-                'text-[13px] font-semibold uppercase tracking-wider',
-                activeDomainId === domain.id && !activeCategoryId ? 'text-accent' : 'text-text-muted hover:text-text',
-              )}
-            >
-              {domain.title}
-            </Link>
-          </div>
-
-          <ul className="space-y-0.5 pt-2 lg:pt-2">
-            {domain.categories.map((category) => {
-              const isActive = activeDomainId === domain.id && activeCategoryId === category.id;
-              return (
-                <li key={category.id}>
+          {domains.map((domain, index) => (
+            <div key={domain.id} className={index === 0 ? 'pt-3' : 'pt-6'}>
+              {!isRail && (
+                <div className="mb-1 px-2">
                   <Link
-                    to={`/${domain.id}/${category.id}`}
+                    to={`/${domain.id}`}
                     onClick={onClose}
-                    title={isRail ? category.title : undefined}
-                    aria-current={isActive ? 'page' : undefined}
                     className={cn(
-                      'flex items-center gap-2 rounded-md px-2 py-2 text-[13px] transition-colors',
-                      isActive
-                        ? 'bg-bg-subtle font-medium text-accent'
-                        : 'text-text-secondary hover:bg-bg-subtle hover:text-text',
-                      isRail && 'justify-center',
+                      'text-[13px] font-semibold uppercase tracking-wider',
+                      activeDomainId === domain.id && !activeCategoryId
+                        ? 'text-accent'
+                        : 'text-text-muted hover:text-text',
                     )}
                   >
-                    {isRail ? (
-                      <span
-                        aria-hidden
-                        className="flex size-6 shrink-0 items-center justify-center rounded-full border border-border-subtle text-[11px] font-medium"
-                      >
-                        {category.title.charAt(0)}
-                      </span>
-                    ) : (
-                      <span className="truncate">{category.title}</span>
-                    )}
+                    {domain.title}
                   </Link>
-                </li>
-              );
-            })}
-          </ul>
+                </div>
+              )}
+
+              <ul className="space-y-0.5 pt-1">
+                {domain.categories.map((category) => {
+                  const isActive = activeDomainId === domain.id && activeCategoryId === category.id;
+                  return (
+                    <li key={category.id}>
+                      <Link
+                        to={`/${domain.id}/${category.id}`}
+                        onClick={onClose}
+                        title={isRail ? category.title : undefined}
+                        aria-current={isActive ? 'page' : undefined}
+                        className={cn(
+                          'flex items-center gap-2 rounded-md px-2 py-2 text-[13px] transition-colors',
+                          isActive
+                            ? 'bg-bg-subtle font-medium text-accent'
+                            : 'text-text-secondary hover:bg-bg-subtle hover:text-text',
+                          isRail && 'justify-center',
+                        )}
+                      >
+                        {isRail ? (
+                          <span
+                            aria-hidden
+                            className="flex size-6 shrink-0 items-center justify-center rounded-full border border-border-subtle text-[11px] font-medium"
+                          >
+                            {category.title.charAt(0)}
+                          </span>
+                        ) : (
+                          <span className="truncate">{category.title}</span>
+                        )}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
         </nav>
       </aside>
     </>

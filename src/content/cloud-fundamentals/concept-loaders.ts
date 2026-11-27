@@ -40,6 +40,50 @@ export const conceptLoaders: Record<string, ConceptModuleLoader> = {
   'metrics-and-alerting': () => import('./monitoring-and-observability/metrics-and-alerting'),
   logging: () => import('./monitoring-and-observability/logging'),
   'distributed-tracing': () => import('./monitoring-and-observability/distributed-tracing'),
+
+  // --- Kubernetes Fundamentals --------------------------------------------
+  // Concept ids are unique across the whole index (see findConceptById),
+  // so they can share one loader registry with the Cloud Fundamentals
+  // concepts. The paths point at the kubernetes-fundamentals tree.
+  'what-is-kubernetes': () => import('../kubernetes-fundamentals/foundations/what-is-kubernetes'),
+  'why-container-orchestration': () => import('../kubernetes-fundamentals/foundations/why-container-orchestration'),
+  'kubernetes-vs-docker': () => import('../kubernetes-fundamentals/foundations/kubernetes-vs-docker'),
+  'declarative-vs-imperative-configuration': () =>
+    import('../kubernetes-fundamentals/foundations/declarative-vs-imperative-configuration'),
+  'desired-state-vs-actual-state': () => import('../kubernetes-fundamentals/foundations/desired-state-vs-actual-state'),
+  'kubernetes-reconciliation-loop': () => import('../kubernetes-fundamentals/foundations/kubernetes-reconciliation-loop'),
+  'kubernetes-cluster-architecture': () =>
+    import('../kubernetes-fundamentals/architecture/kubernetes-cluster-architecture'),
+  'control-plane': () => import('../kubernetes-fundamentals/architecture/control-plane'),
+  'worker-nodes': () => import('../kubernetes-fundamentals/architecture/worker-nodes'),
+  'kubernetes-api-server': () => import('../kubernetes-fundamentals/architecture/kubernetes-api-server'),
+  etcd: () => import('../kubernetes-fundamentals/architecture/etcd'),
+  scheduler: () => import('../kubernetes-fundamentals/architecture/scheduler'),
+  'controller-manager': () => import('../kubernetes-fundamentals/architecture/controller-manager'),
+  kubelet: () => import('../kubernetes-fundamentals/architecture/kubelet'),
+  'kube-proxy': () => import('../kubernetes-fundamentals/architecture/kube-proxy'),
+  'container-runtime': () => import('../kubernetes-fundamentals/architecture/container-runtime'),
+  pod: () => import('../kubernetes-fundamentals/workloads/pod'),
+  'multi-container-pods': () => import('../kubernetes-fundamentals/workloads/multi-container-pods'),
+  replicaset: () => import('../kubernetes-fundamentals/workloads/replicaset'),
+  deployment: () => import('../kubernetes-fundamentals/workloads/deployment'),
+  statefulset: () => import('../kubernetes-fundamentals/workloads/statefulset'),
+  daemonset: () => import('../kubernetes-fundamentals/workloads/daemonset'),
+  'job-and-cronjob': () => import('../kubernetes-fundamentals/workloads/job-and-cronjob'),
+  'pod-networking': () => import('../kubernetes-fundamentals/networking/pod-networking'),
+  service: () => import('../kubernetes-fundamentals/networking/service'),
+  clusterip: () => import('../kubernetes-fundamentals/networking/clusterip'),
+  nodeport: () => import('../kubernetes-fundamentals/networking/nodeport'),
+  'loadbalancer-service': () => import('../kubernetes-fundamentals/networking/loadbalancer-service'),
+  'service-discovery': () => import('../kubernetes-fundamentals/networking/service-discovery'),
+  coredns: () => import('../kubernetes-fundamentals/networking/coredns'),
+  'kubernetes-objects': () => import('../kubernetes-fundamentals/configuration/kubernetes-objects'),
+  'yaml-manifests': () => import('../kubernetes-fundamentals/configuration/yaml-manifests'),
+  'labels-and-selectors': () => import('../kubernetes-fundamentals/configuration/labels-and-selectors'),
+  namespaces: () => import('../kubernetes-fundamentals/configuration/namespaces'),
+  configmaps: () => import('../kubernetes-fundamentals/configuration/configmaps'),
+  secrets: () => import('../kubernetes-fundamentals/configuration/secrets'),
+  'resource-requests-and-limits': () => import('../kubernetes-fundamentals/configuration/resource-requests-and-limits'),
 };
 
 /** A concept's metadata merged with its lazily loaded bodies, in metadata order. */

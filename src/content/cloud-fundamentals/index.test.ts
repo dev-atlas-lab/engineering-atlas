@@ -126,7 +126,7 @@ describe('metadata/content boundary', () => {
 
   it('the eager index graph imports only metadata modules — never a concept content module', () => {
     expect(Object.keys(eagerSources).length).toBeGreaterThan(10);
-    const allowed = /^(\.\.\/types|\.\.\/\.\.\/types|\.\/meta|\.\/categories\/[\w-]+|\.\/(compute|global-infrastructure|storage|networking|identity-and-access-management|security|load-balancing|scalability-and-reliability|monitoring-and-observability))$/;
+    const allowed = /^(\.\.\/types|\.\.\/\.\.\/types|\.\.\/kubernetes-fundamentals|\.\/meta|\.\/categories\/[\w-]+|\.\/(compute|global-infrastructure|storage|networking|identity-and-access-management|security|load-balancing|scalability-and-reliability|monitoring-and-observability))$/;
     const offenders: string[] = [];
     for (const [file, source] of Object.entries(eagerSources)) {
       for (const [, specifier] of source.matchAll(/from '([^']+)'/g)) {
@@ -136,8 +136,11 @@ describe('metadata/content boundary', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('there is a loader for every concept with a lesson outline, and no other loaders', () => {
-    expect(Object.keys(conceptLoaders).sort()).toEqual(authoredConcepts.map((c) => c.id).sort());
+  it('there is a loader for every Cloud Fundamentals concept with a lesson outline', () => {
+    const authoredIds = authoredConcepts.map((c) => c.id);
+    for (const id of authoredIds) {
+      expect(conceptLoaders[id], `missing loader for ${id}`).toBeDefined();
+    }
   });
 });
 
@@ -165,8 +168,7 @@ describe('content lookup functions', () => {
   });
 
   it('domains array contains cloud-fundamentals', () => {
-    expect(domains).toHaveLength(1);
-    expect(domains[0]?.id).toBe('cloud-fundamentals');
+    expect(domains.map((d) => d.id)).toContain('cloud-fundamentals');
   });
 });
 
