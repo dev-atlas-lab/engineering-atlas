@@ -33,7 +33,20 @@ Concept-level coverage is tracked in `docs/CLOUD_FUNDAMENTALS_CURRICULUM.md`.
 | 3A | Foundations, Architecture, Workloads, Networking, Configuration (5 categories, 4 simulation labs) | Merged (`990cbad`, PR #10) |
 | 3B | Pod Lifecycle, Scheduling, Resource Management, Scaling, Deployment Strategies (5 categories, 5 simulation labs) | Merged (`eb97552`, PR #11) |
 | 3C | Networking Internals, Ingress & Traffic, Network Security, Identity & Access, Workload Security (5 categories, 5 simulation labs) | Merged (`e6dc7ee`, PR #12) |
-| 3D | Storage Fundamentals, Storage Internals, Stateful Workloads, Data Reliability, Storage Operations | In progress (`feat/kubernetes-storage-reliability-slice-3d`) |
+| 3D | Storage Fundamentals, Storage Internals, Stateful Workloads, Data Reliability & Recovery, Production Storage Operations (5 categories, 5 simulation labs) | Merged (`3705b27`, PR #15) |
+
+### Cross-Cutting Initiative — Provider-specific SVG Visual System (ADR-009)
+
+Proposed architecture to add curated, official AWS, Azure, and Kubernetes SVG icons to provider-specific and comparison diagrams while keeping generic concept scenes on the existing SVG primitives (`docs/decisions/ADR-009-provider-specific-svg-visual-system.md`).
+
+| Stage | Scope | Status |
+|---|---|---|
+| 1 | Architecture decision and asset governance (ADR-009, licensing verification, manifest/attribution rules) | Proposed |
+| 2 | Official SVG asset registry (curated assets, `MANIFEST.json`, `ATTRIBUTIONS.md`, registry metadata) | Planned |
+| 3 | Centralized visual resolver (`resolveNodeVisual`, context/asset compatibility, generic fallback) | Planned |
+| 4 | Renderer integration (SVG topology/sequence scenes, component inspector, lazy React Flow scene) | Planned |
+| 5 | Selective scene migration (Tier 1 provider scenes, Tier 2 Kubernetes scenes, Tier 3 comparison scenes) | Planned |
+| 6 | Visual and accessibility QA (light/dark themes, keyboard/ARIA, 390×844 and 1440×900 viewports) | Planned |
 
 ## Milestone Overview
 
@@ -44,7 +57,7 @@ Concept-level coverage is tracked in `docs/CLOUD_FUNDAMENTALS_CURRICULUM.md`.
 | M2 | First Learning Domain — Cloud Fundamentals | Delivered incrementally (Slices 1–2D; 30/34 concepts active) |
 | M3 | Interactive Labs & Simulations | Delivered incrementally (Slices 1–2D) |
 | M4 | Progress Tracking & Knowledge Checks | Delivered incrementally (Slices 1–2D) |
-| M5+ | Additional Domains (Kubernetes Fundamentals) | In progress (Slices 3A–3C merged; Slice 3D in progress) |
+| M5+ | Additional Domains (Kubernetes Fundamentals) | In progress (Slices 3A–3D merged) |
 
 ---
 
