@@ -84,6 +84,60 @@ export const conceptLoaders: Record<string, ConceptModuleLoader> = {
   configmaps: () => import('../kubernetes-fundamentals/configuration/configmaps'),
   secrets: () => import('../kubernetes-fundamentals/configuration/secrets'),
   'resource-requests-and-limits': () => import('../kubernetes-fundamentals/configuration/resource-requests-and-limits'),
+
+  // --- Kubernetes Fundamentals: Operations (Slice 3B) --------------------
+  // Pod lifecycle & health management
+  'pod-lifecycle-phases': () => import('../kubernetes-fundamentals/pod-lifecycle/pod-lifecycle-phases'),
+  'container-lifecycle': () => import('../kubernetes-fundamentals/pod-lifecycle/container-lifecycle'),
+  'container-restart-policies': () => import('../kubernetes-fundamentals/pod-lifecycle/container-restart-policies'),
+  'liveness-probes': () => import('../kubernetes-fundamentals/pod-lifecycle/liveness-probes'),
+  'readiness-probes': () => import('../kubernetes-fundamentals/pod-lifecycle/readiness-probes'),
+  'startup-probes': () => import('../kubernetes-fundamentals/pod-lifecycle/startup-probes'),
+  'pod-termination-and-graceful-shutdown': () =>
+    import('../kubernetes-fundamentals/pod-lifecycle/pod-termination-and-graceful-shutdown'),
+
+  // Scheduling & placement
+  'scheduling-deep-dive': () => import('../kubernetes-fundamentals/scheduling/scheduling-deep-dive'),
+  'node-selectors': () => import('../kubernetes-fundamentals/scheduling/node-selectors'),
+  'node-affinity-and-anti-affinity': () =>
+    import('../kubernetes-fundamentals/scheduling/node-affinity-and-anti-affinity'),
+  'pod-affinity-and-anti-affinity': () =>
+    import('../kubernetes-fundamentals/scheduling/pod-affinity-and-anti-affinity'),
+  'taints-and-tolerations': () => import('../kubernetes-fundamentals/scheduling/taints-and-tolerations'),
+  'priority-classes-and-preemption': () =>
+    import('../kubernetes-fundamentals/scheduling/priority-classes-and-preemption'),
+  'topology-spread-constraints': () => import('../kubernetes-fundamentals/scheduling/topology-spread-constraints'),
+
+  // Resource management
+  'cpu-requests-and-limits': () => import('../kubernetes-fundamentals/resource-management/cpu-requests-and-limits'),
+  'memory-requests-and-limits': () =>
+    import('../kubernetes-fundamentals/resource-management/memory-requests-and-limits'),
+  'resource-qos-classes': () => import('../kubernetes-fundamentals/resource-management/resource-qos-classes'),
+  oomkilled: () => import('../kubernetes-fundamentals/resource-management/oomkilled'),
+  'cpu-throttling': () => import('../kubernetes-fundamentals/resource-management/cpu-throttling'),
+  limitrange: () => import('../kubernetes-fundamentals/resource-management/limitrange'),
+  resourcequota: () => import('../kubernetes-fundamentals/resource-management/resourcequota'),
+
+  // Scaling & availability
+  'horizontal-pod-autoscaler': () => import('../kubernetes-fundamentals/scaling/horizontal-pod-autoscaler'),
+  'vertical-pod-autoscaler': () => import('../kubernetes-fundamentals/scaling/vertical-pod-autoscaler'),
+  'cluster-autoscaler': () => import('../kubernetes-fundamentals/scaling/cluster-autoscaler'),
+  'pod-disruption-budget': () => import('../kubernetes-fundamentals/scaling/pod-disruption-budget'),
+  'kubernetes-high-availability': () => import('../kubernetes-fundamentals/scaling/kubernetes-high-availability'),
+  'replication-and-failure-recovery': () =>
+    import('../kubernetes-fundamentals/scaling/replication-and-failure-recovery'),
+
+  // Deployment strategies & rollouts
+  'rolling-updates': () => import('../kubernetes-fundamentals/deployment-strategies/rolling-updates'),
+  rollback: () => import('../kubernetes-fundamentals/deployment-strategies/rollback'),
+  'deployment-revision-history': () =>
+    import('../kubernetes-fundamentals/deployment-strategies/deployment-revision-history'),
+  'blue-green-deployment': () => import('../kubernetes-fundamentals/deployment-strategies/blue-green-deployment'),
+  'canary-deployment': () => import('../kubernetes-fundamentals/deployment-strategies/canary-deployment'),
+  'maxsurge-and-maxunavailable': () =>
+    import('../kubernetes-fundamentals/deployment-strategies/maxsurge-and-maxunavailable'),
+  'zero-downtime-deployment': () =>
+    import('../kubernetes-fundamentals/deployment-strategies/zero-downtime-deployment'),
 };
 
 /** A concept's metadata merged with its lazily loaded bodies, in metadata order. */
