@@ -14,6 +14,7 @@ Before doing any non-trivial work, read:
 4. [docs/CONTENT_MODEL.md](docs/CONTENT_MODEL.md) — how learning content is structured.
 5. [docs/decisions/](docs/decisions/) — the accepted ADRs, especially ADR-007 (per-concept loading) and ADR-008 (SVG-first visualization).
 6. [docs/PRODUCT_ROADMAP.md](docs/PRODUCT_ROADMAP.md) — milestone status, current slice.
+7. [docs/engineering/AGENT_GIT_WORKFLOW.md](docs/engineering/AGENT_GIT_WORKFLOW.md) — canonical agent-agnostic Git contribution standard (branches, commits, attribution, PRs, safety).
 
 Then consult the relevant agent workflow in [docs/agents/](docs/agents/).
 
@@ -284,12 +285,20 @@ See [docs/LAB_ENGINE.md](docs/LAB_ENGINE.md). The rules:
 
 ## 10. Git Workflow
 
+All coding agents must follow the repository-level standard in
+[docs/engineering/AGENT_GIT_WORKFLOW.md](docs/engineering/AGENT_GIT_WORKFLOW.md),
+using [.gitmessage](.gitmessage) for commits and
+[.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md) for pull
+requests. Project-specific reminders:
+
 - Branch names describe the work: `feat/<domain>-<slice>`, `fix/<area>-<issue>`,
-  `docs/<area>`, `chore/<area>`.
+  `refactor/<area>`, `docs/<area>`, `test/<area>`, `chore/<area>`.
 - Current main branch: `main`.
 - Conventional commit messages: `feat(scope): …`, `fix(scope): …`,
-  `docs(scope): …`, `refactor(scope): …`, `test(scope): …`, `chore(scope): …`.
-- One logical change per commit.
+  `docs(scope): …`, `refactor(scope): …`, `test(scope): …`, `chore(scope): …`,
+  with `Agent:` and `Model:` trailers per [.gitmessage](.gitmessage).
+- One logical change per commit; use explicit file staging when unrelated or
+  untracked work exists.
 - **Never commit directly to `main`** unless the user explicitly requests it.
 - **Never force-push, never rewrite history, never skip hooks** unless the
   user explicitly asks.
