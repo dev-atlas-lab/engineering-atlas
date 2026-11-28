@@ -13,12 +13,17 @@ import { scheduling } from './scheduling';
 import { resourceManagement } from './resource-management';
 import { scaling } from './scaling';
 import { deploymentStrategies } from './deployment-strategies';
+import { networkingInternals } from './networking-internals';
+import { ingressAndTraffic } from './ingress-and-traffic';
+import { networkSecurity } from './network-security';
+import { identityAndAccess } from './identity-and-access';
+import { workloadSecurity } from './workload-security';
 
 export const kubernetesFundamentals: Domain = {
   id: 'kubernetes-fundamentals',
   title: 'Kubernetes Fundamentals',
   description:
-    'How Kubernetes works from first principles — its architecture, declarative model, controllers, workloads, networking, configuration, and the day-two operations surface: Pod lifecycle and health, scheduling, resource management, scaling, and deployment strategies.',
+    'How Kubernetes works end to end — architecture, workloads, networking, configuration, the day-two operations surface (Pod lifecycle and health, scheduling, resources, scaling, rollouts), and the networking & security plane (CNI, Ingress and Gateway, NetworkPolicy, RBAC, Pod Security).',
   categories: [
     foundations,
     architecture,
@@ -30,5 +35,10 @@ export const kubernetesFundamentals: Domain = {
     resourceManagement,
     scaling,
     deploymentStrategies,
+    networkingInternals,
+    ingressAndTraffic,
+    networkSecurity,
+    identityAndAccess,
+    workloadSecurity,
   ],
 };

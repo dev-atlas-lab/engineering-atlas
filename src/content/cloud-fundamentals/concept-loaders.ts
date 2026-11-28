@@ -138,6 +138,95 @@ export const conceptLoaders: Record<string, ConceptModuleLoader> = {
     import('../kubernetes-fundamentals/deployment-strategies/maxsurge-and-maxunavailable'),
   'zero-downtime-deployment': () =>
     import('../kubernetes-fundamentals/deployment-strategies/zero-downtime-deployment'),
+
+  // --- Kubernetes Fundamentals: Networking & Security (Slice 3C) --------
+  // Networking internals
+  'kubernetes-network-model': () =>
+    import('../kubernetes-fundamentals/networking-internals/kubernetes-network-model'),
+  'container-network-interface': () =>
+    import('../kubernetes-fundamentals/networking-internals/container-network-interface'),
+  'cni-plugin-architecture': () =>
+    import('../kubernetes-fundamentals/networking-internals/cni-plugin-architecture'),
+  'pod-to-pod-communication': () =>
+    import('../kubernetes-fundamentals/networking-internals/pod-to-pod-communication'),
+  'cross-node-pod-networking': () =>
+    import('../kubernetes-fundamentals/networking-internals/cross-node-pod-networking'),
+  'network-routing-and-encapsulation': () =>
+    import('../kubernetes-fundamentals/networking-internals/network-routing-and-encapsulation'),
+  'kube-proxy-and-service-routing': () =>
+    import('../kubernetes-fundamentals/networking-internals/kube-proxy-and-service-routing'),
+  'iptables-vs-ipvs': () =>
+    import('../kubernetes-fundamentals/networking-internals/iptables-vs-ipvs'),
+  'network-troubleshooting-fundamentals': () =>
+    import('../kubernetes-fundamentals/networking-internals/network-troubleshooting-fundamentals'),
+
+  // Ingress & traffic management
+  'ingress-architecture': () =>
+    import('../kubernetes-fundamentals/ingress-and-traffic/ingress-architecture'),
+  'ingress-controller': () =>
+    import('../kubernetes-fundamentals/ingress-and-traffic/ingress-controller'),
+  'ingress-rules-and-path-routing': () =>
+    import('../kubernetes-fundamentals/ingress-and-traffic/ingress-rules-and-path-routing'),
+  'tls-termination': () =>
+    import('../kubernetes-fundamentals/ingress-and-traffic/tls-termination'),
+  'gateway-api': () =>
+    import('../kubernetes-fundamentals/ingress-and-traffic/gateway-api'),
+  'north-south-vs-east-west-traffic': () =>
+    import('../kubernetes-fundamentals/ingress-and-traffic/north-south-vs-east-west-traffic'),
+  'service-mesh-fundamentals': () =>
+    import('../kubernetes-fundamentals/ingress-and-traffic/service-mesh-fundamentals'),
+  'sidecar-proxy-architecture': () =>
+    import('../kubernetes-fundamentals/ingress-and-traffic/sidecar-proxy-architecture'),
+
+  // Network security
+  'kubernetes-networkpolicy': () =>
+    import('../kubernetes-fundamentals/network-security/kubernetes-networkpolicy'),
+  'ingress-and-egress-policies': () =>
+    import('../kubernetes-fundamentals/network-security/ingress-and-egress-policies'),
+  'kubernetes-network-isolation': () =>
+    import('../kubernetes-fundamentals/network-security/kubernetes-network-isolation'),
+  'default-deny-policies': () =>
+    import('../kubernetes-fundamentals/network-security/default-deny-policies'),
+  'namespace-network-segmentation': () =>
+    import('../kubernetes-fundamentals/network-security/namespace-network-segmentation'),
+  'network-policy-enforcement-by-cni': () =>
+    import('../kubernetes-fundamentals/network-security/network-policy-enforcement-by-cni'),
+
+  // Identity & access management
+  'authn-authz-admission': () =>
+    import('../kubernetes-fundamentals/identity-and-access/authn-authz-admission'),
+  'kubernetes-authentication': () =>
+    import('../kubernetes-fundamentals/identity-and-access/kubernetes-authentication'),
+  'kubernetes-authorization': () =>
+    import('../kubernetes-fundamentals/identity-and-access/kubernetes-authorization'),
+  'rbac-architecture': () =>
+    import('../kubernetes-fundamentals/identity-and-access/rbac-architecture'),
+  'role-and-clusterrole': () =>
+    import('../kubernetes-fundamentals/identity-and-access/role-and-clusterrole'),
+  'rolebinding-and-clusterrolebinding': () =>
+    import('../kubernetes-fundamentals/identity-and-access/rolebinding-and-clusterrolebinding'),
+  serviceaccounts: () =>
+    import('../kubernetes-fundamentals/identity-and-access/serviceaccounts'),
+  'serviceaccount-token-projection': () =>
+    import('../kubernetes-fundamentals/identity-and-access/serviceaccount-token-projection'),
+
+  // Workload security
+  'pod-security-standards': () =>
+    import('../kubernetes-fundamentals/workload-security/pod-security-standards'),
+  'pod-security-admission': () =>
+    import('../kubernetes-fundamentals/workload-security/pod-security-admission'),
+  'security-context': () =>
+    import('../kubernetes-fundamentals/workload-security/security-context'),
+  'linux-capabilities': () =>
+    import('../kubernetes-fundamentals/workload-security/linux-capabilities'),
+  'privileged-containers': () =>
+    import('../kubernetes-fundamentals/workload-security/privileged-containers'),
+  'seccomp-and-apparmor': () =>
+    import('../kubernetes-fundamentals/workload-security/seccomp-and-apparmor'),
+  'secrets-security': () =>
+    import('../kubernetes-fundamentals/workload-security/secrets-security'),
+  'image-security-and-supply-chain-basics': () =>
+    import('../kubernetes-fundamentals/workload-security/image-security-and-supply-chain-basics'),
 };
 
 /** A concept's metadata merged with its lazily loaded bodies, in metadata order. */

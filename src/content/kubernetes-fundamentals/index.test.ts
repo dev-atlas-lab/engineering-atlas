@@ -11,7 +11,7 @@ describe('Kubernetes Fundamentals metadata index', () => {
     expect(domains.map((d) => d.id)).toContain('kubernetes-fundamentals');
   });
 
-  it('has ten categories in the expected order', () => {
+  it('has fifteen categories in the expected order', () => {
     expect(kubernetesFundamentals.categories.map((c) => c.id)).toEqual([
       'foundations',
       'architecture',
@@ -23,6 +23,11 @@ describe('Kubernetes Fundamentals metadata index', () => {
       'resource-management',
       'scaling',
       'deployment-strategies',
+      'networking-internals',
+      'ingress-and-traffic',
+      'network-security',
+      'identity-and-access',
+      'workload-security',
     ]);
   });
 
@@ -58,6 +63,12 @@ describe('Kubernetes Fundamentals metadata index', () => {
     expect(labIds).toContain('resource-management-simulator');
     expect(labIds).toContain('hpa-scaling-simulator');
     expect(labIds).toContain('deployment-rollout-simulator');
+    // The five Slice 3C labs exist.
+    expect(labIds).toContain('cni-networking-explorer');
+    expect(labIds).toContain('ingress-routing-simulator');
+    expect(labIds).toContain('networkpolicy-simulator');
+    expect(labIds).toContain('rbac-permission-simulator');
+    expect(labIds).toContain('workload-security-simulator');
   });
 
   it('every kubernetes concept id is distinct from every cloud-fundamentals concept id', () => {
@@ -68,11 +79,17 @@ describe('Kubernetes Fundamentals metadata index', () => {
     }
   });
 
-  it('slice 3B adds at least 30 concepts across five operations categories', () => {
-    const operationsCategories = ['pod-lifecycle', 'scheduling', 'resource-management', 'scaling', 'deployment-strategies'];
-    const operationsConcepts = kubernetesFundamentals.categories
-      .filter((c) => operationsCategories.includes(c.id))
+  it('slice 3C adds at least 35 concepts across five networking & security categories', () => {
+    const sliceCategories = [
+      'networking-internals',
+      'ingress-and-traffic',
+      'network-security',
+      'identity-and-access',
+      'workload-security',
+    ];
+    const sliceConcepts = kubernetesFundamentals.categories
+      .filter((c) => sliceCategories.includes(c.id))
       .flatMap((c) => c.concepts);
-    expect(operationsConcepts.length).toBeGreaterThanOrEqual(30);
+    expect(sliceConcepts.length).toBeGreaterThanOrEqual(35);
   });
 });
