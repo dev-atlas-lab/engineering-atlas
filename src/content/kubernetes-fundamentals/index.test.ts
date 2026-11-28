@@ -11,13 +11,18 @@ describe('Kubernetes Fundamentals metadata index', () => {
     expect(domains.map((d) => d.id)).toContain('kubernetes-fundamentals');
   });
 
-  it('has five categories in the expected order', () => {
+  it('has ten categories in the expected order', () => {
     expect(kubernetesFundamentals.categories.map((c) => c.id)).toEqual([
       'foundations',
       'architecture',
       'workloads',
       'networking',
       'configuration',
+      'pod-lifecycle',
+      'scheduling',
+      'resource-management',
+      'scaling',
+      'deployment-strategies',
     ]);
   });
 
@@ -42,11 +47,17 @@ describe('Kubernetes Fundamentals metadata index', () => {
   it('every lab id is registered on a concept that owns it', () => {
     const labIds = allConcepts.flatMap((c) => (c.labs ?? []).map((l) => l.id));
     expect(new Set(labIds).size).toBe(labIds.length);
-    // The four mandated labs exist.
+    // The four Slice 3A labs exist.
     expect(labIds).toContain('cluster-architecture-explorer');
     expect(labIds).toContain('scheduler-simulator');
     expect(labIds).toContain('deployment-scaling-simulator');
     expect(labIds).toContain('reconciliation-simulator');
+    // The five Slice 3B labs exist.
+    expect(labIds).toContain('pod-health-probe-simulator');
+    expect(labIds).toContain('scheduling-constraints-simulator');
+    expect(labIds).toContain('resource-management-simulator');
+    expect(labIds).toContain('hpa-scaling-simulator');
+    expect(labIds).toContain('deployment-rollout-simulator');
   });
 
   it('every kubernetes concept id is distinct from every cloud-fundamentals concept id', () => {
@@ -55,5 +66,13 @@ describe('Kubernetes Fundamentals metadata index', () => {
     for (const concept of allConcepts) {
       expect(cloudIds.has(concept.id), `collision on ${concept.id}`).toBe(false);
     }
+  });
+
+  it('slice 3B adds at least 30 concepts across five operations categories', () => {
+    const operationsCategories = ['pod-lifecycle', 'scheduling', 'resource-management', 'scaling', 'deployment-strategies'];
+    const operationsConcepts = kubernetesFundamentals.categories
+      .filter((c) => operationsCategories.includes(c.id))
+      .flatMap((c) => c.concepts);
+    expect(operationsConcepts.length).toBeGreaterThanOrEqual(30);
   });
 });
