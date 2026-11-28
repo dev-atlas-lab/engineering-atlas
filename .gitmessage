@@ -1,0 +1,38 @@
+<type>(<scope>): <short description>
+
+# Body — explain what changed, why it changed (when useful), important
+# implementation details, and any relevant breaking changes.
+#
+# Supported types:
+#   feat      A new feature or capability
+#   fix       A bug fix
+#   refactor  Code restructuring without behavior change
+#   perf      Performance improvement
+#   test      Adding or updating tests
+#   docs      Documentation-only changes
+#   build     Build system or dependency changes
+#   ci        CI/CD pipeline or automation changes
+#   chore     Maintenance, tooling, or housekeeping
+#   revert    Reverting a prior commit
+#
+# Subject rules:
+#   - Concise, imperative mood, no trailing period (e.g. "add", not "added").
+#   - Do NOT put agent or model attribution in the subject line.
+#
+# Breaking changes (if any):
+# BREAKING CHANGE: <description of breaking change and migration notes>
+#
+# Required attribution trailers (for every agent-generated commit):
+Agent: <agent name>
+Model: <exact model name>
+#
+# Optional trailers (uncomment only when applicable):
+# Supporting-Agents: <agent names>
+# Issue: #<number>
+#
+# Attribution rules:
+#   - Never guess the model; use `Unknown` if the runtime does not expose it.
+#   - Do not fabricate issue numbers.
+#   - Do not add a fake `Co-Authored-By` identity.
+#
+# Optional local Git setup: git config commit.template .gitmessage

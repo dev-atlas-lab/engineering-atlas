@@ -64,6 +64,7 @@ Tagline: **Understand systems. Explore architecture. Master engineering.**
 
 ## Agent Workflow
 
+- Follow the canonical repository-level Git contribution standard in [docs/engineering/AGENT_GIT_WORKFLOW.md](docs/engineering/AGENT_GIT_WORKFLOW.md) (with [.gitmessage](.gitmessage) and [.github/PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md)) for branching, Conventional Commits with agent/model attribution trailers, pull requests, and Git safety.
 - For major architectural decisions: identify the problem, present alternatives, explain trade-offs, recommend an approach, and wait for approval when necessary.
 - Do not start a new milestone without explicit approval.
 - Do not install dependencies or implement UI during documentation milestones.
