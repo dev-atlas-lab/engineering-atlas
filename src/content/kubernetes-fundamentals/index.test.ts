@@ -1,8 +1,8 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import { kubernetesFundamentals } from './index';
-import { domains } from '../cloud-fundamentals/index';
-import { conceptLoaders } from '../cloud-fundamentals/concept-loaders';
-import type { ConceptMeta } from '../types';
+import { domains, findConceptById } from '../cloud-fundamentals/index';
+import { conceptLoaders, createConceptContentLoader, type LoadedConcept } from '../cloud-fundamentals/concept-loaders';
+import type { ConceptMeta, SimulationLab } from '../types';
 
 const allConcepts: ConceptMeta[] = kubernetesFundamentals.categories.flatMap((c) => c.concepts);
 
@@ -11,7 +11,7 @@ describe('Kubernetes Fundamentals metadata index', () => {
     expect(domains.map((d) => d.id)).toContain('kubernetes-fundamentals');
   });
 
-  it('has fifteen categories in the expected order', () => {
+  it('has twenty categories in the expected order', () => {
     expect(kubernetesFundamentals.categories.map((c) => c.id)).toEqual([
       'foundations',
       'architecture',
@@ -28,6 +28,11 @@ describe('Kubernetes Fundamentals metadata index', () => {
       'network-security',
       'identity-and-access',
       'workload-security',
+      'storage-fundamentals',
+      'storage-internals',
+      'stateful-workloads',
+      'data-reliability',
+      'storage-operations',
     ]);
   });
 
@@ -69,6 +74,12 @@ describe('Kubernetes Fundamentals metadata index', () => {
     expect(labIds).toContain('networkpolicy-simulator');
     expect(labIds).toContain('rbac-permission-simulator');
     expect(labIds).toContain('workload-security-simulator');
+    // The five Slice 3D labs exist.
+    expect(labIds).toContain('pv-pvc-binder-simulator');
+    expect(labIds).toContain('dynamic-provisioning-simulator');
+    expect(labIds).toContain('statefulset-storage-simulator');
+    expect(labIds).toContain('backup-recovery-simulator');
+    expect(labIds).toContain('storage-troubleshooting-lab');
   });
 
   it('every kubernetes concept id is distinct from every cloud-fundamentals concept id', () => {
@@ -91,5 +102,110 @@ describe('Kubernetes Fundamentals metadata index', () => {
       .filter((c) => sliceCategories.includes(c.id))
       .flatMap((c) => c.concepts);
     expect(sliceConcepts.length).toBeGreaterThanOrEqual(35);
+  });
+
+  it('slice 3D adds at least 40 concepts across five storage & reliability categories', () => {
+    const sliceCategories = [
+      'storage-fundamentals',
+      'storage-internals',
+      'stateful-workloads',
+      'data-reliability',
+      'storage-operations',
+    ];
+    const sliceConcepts = kubernetesFundamentals.categories
+      .filter((c) => sliceCategories.includes(c.id))
+      .flatMap((c) => c.concepts);
+    expect(sliceConcepts.length).toBeGreaterThanOrEqual(40);
+  });
+});
+
+describe('Slice 3D loaded content & cross-reference integrity', () => {
+  const slice3DCategories = [
+    'storage-fundamentals',
+    'storage-internals',
+    'stateful-workloads',
+    'data-reliability',
+    'storage-operations',
+  ];
+  const slice3DConcepts = kubernetesFundamentals.categories
+    .filter((c) => slice3DCategories.includes(c.id))
+    .flatMap((c) => c.concepts);
+
+  let loaded: LoadedConcept[] = [];
+
+  beforeAll(async () => {
+    const loader = createConceptContentLoader(conceptLoaders);
+    loaded = await Promise.all(slice3DConcepts.map((c) => loader.load(c.id)));
+  });
+
+  it('every Slice 3D concept loads with lessons and labs matching metadata order', () => {
+    expect(loaded).toHaveLength(slice3DConcepts.length);
+    for (const concept of loaded) {
+      const meta = findConceptById(concept.conceptId)!;
+      expect(concept.lessons.map((l) => l.id)).toEqual((meta.lessons ?? []).map((l) => l.id));
+      expect(concept.labs.map((l) => l.id)).toEqual((meta.labs ?? []).map((l) => l.id));
+    }
+  });
+
+  it('every Slice 3D simulation lab has a matching simulation binding', () => {
+    for (const concept of loaded) {
+      for (const lab of concept.labs.filter((l) => l.type === 'simulation')) {
+        const entry = concept.simulations[lab.id];
+        expect(entry, `missing simulation binding for ${lab.id}`).toBeDefined();
+        expect(entry?.simulationId).toBe((lab.content as SimulationLab).simulationId);
+      }
+    }
+  });
+
+  it('every Slice 3D visualization satisfies sequence arity and valid node/boundary refs', () => {
+    for (const concept of loaded) {
+      for (const lesson of concept.lessons) {
+        const scene = lesson.visualization;
+        if (!scene) continue;
+        expect(scene.states.length, scene.id).toBeGreaterThan(0);
+        if (scene.type === 'sequence') {
+          expect(scene.states.length, `${scene.id} sequence arity`).toBe(scene.edges.length + 1);
+        }
+        const nodeIds = new Set(scene.nodes.map((n) => n.id));
+        for (const edge of scene.edges) {
+          expect(nodeIds.has(edge.source) && nodeIds.has(edge.target), `${scene.id}:${edge.id}`).toBe(true);
+        }
+        for (const boundary of scene.boundaries ?? []) {
+          expect(boundary.nodeIds.length, `${scene.id}:${boundary.id}`).toBeGreaterThan(0);
+          for (const id of boundary.nodeIds) {
+            expect(nodeIds.has(id), `${scene.id}:${boundary.id}:${id}`).toBe(true);
+          }
+        }
+      }
+    }
+  });
+
+  it('every Slice 3D knowledge check has valid options and explanations', () => {
+    for (const concept of loaded) {
+      for (const lesson of concept.lessons) {
+        for (const q of lesson.knowledgeCheck ?? []) {
+          const correctCount = q.options.filter((o) => o.correct).length;
+          if (q.type === 'multi-select') expect(correctCount, q.id).toBeGreaterThan(0);
+          else expect(correctCount, q.id).toBe(1);
+          for (const opt of q.options) expect(opt.explanation.length, `${q.id}:${opt.id}`).toBeGreaterThan(0);
+        }
+      }
+    }
+  });
+
+  it('every Slice 3D prerequisite and relatedConcept resolves across domains, and lesson/lab ids never collide globally', () => {
+    const allIndexConcepts = domains.flatMap((d) => d.categories.flatMap((c) => c.concepts));
+    const allConceptIds = new Set(allIndexConcepts.map((c) => c.id));
+    for (const concept of slice3DConcepts) {
+      for (const ref of [...(concept.prerequisites ?? []), ...(concept.relatedConcepts ?? [])]) {
+        expect(allConceptIds.has(ref), `${concept.id} -> ${ref}`).toBe(true);
+      }
+    }
+
+    const allLessonIds = allIndexConcepts.flatMap((c) => (c.lessons ?? []).map((l) => l.id));
+    const allLabIds = allIndexConcepts.flatMap((c) => (c.labs ?? []).map((l) => l.id));
+    expect(new Set(allLessonIds).size).toBe(allLessonIds.length);
+    expect(new Set(allLabIds).size).toBe(allLabIds.length);
+    expect(allLabIds.filter((id) => allLessonIds.includes(id))).toEqual([]);
   });
 });

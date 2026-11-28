@@ -227,6 +227,91 @@ export const conceptLoaders: Record<string, ConceptModuleLoader> = {
     import('../kubernetes-fundamentals/workload-security/secrets-security'),
   'image-security-and-supply-chain-basics': () =>
     import('../kubernetes-fundamentals/workload-security/image-security-and-supply-chain-basics'),
+
+  // --- Kubernetes Fundamentals: Storage & Reliability (Slice 3D) --------
+  // Storage fundamentals
+  'container-filesystem-and-ephemeral-storage': () =>
+    import('../kubernetes-fundamentals/storage-fundamentals/container-filesystem-and-ephemeral-storage'),
+  'kubernetes-volumes': () =>
+    import('../kubernetes-fundamentals/storage-fundamentals/kubernetes-volumes'),
+  emptydir: () => import('../kubernetes-fundamentals/storage-fundamentals/emptydir'),
+  hostpath: () => import('../kubernetes-fundamentals/storage-fundamentals/hostpath'),
+  'persistent-volumes': () =>
+    import('../kubernetes-fundamentals/storage-fundamentals/persistent-volumes'),
+  'persistent-volume-claims': () =>
+    import('../kubernetes-fundamentals/storage-fundamentals/persistent-volume-claims'),
+  storageclass: () => import('../kubernetes-fundamentals/storage-fundamentals/storageclass'),
+  'access-modes': () => import('../kubernetes-fundamentals/storage-fundamentals/access-modes'),
+  'reclaim-policies': () => import('../kubernetes-fundamentals/storage-fundamentals/reclaim-policies'),
+  'volume-lifecycle': () => import('../kubernetes-fundamentals/storage-fundamentals/volume-lifecycle'),
+
+  // Storage internals (CSI & provisioning)
+  'container-storage-interface': () =>
+    import('../kubernetes-fundamentals/storage-internals/container-storage-interface'),
+  'csi-architecture': () => import('../kubernetes-fundamentals/storage-internals/csi-architecture'),
+  'csi-controller-plugin': () =>
+    import('../kubernetes-fundamentals/storage-internals/csi-controller-plugin'),
+  'csi-node-plugin': () => import('../kubernetes-fundamentals/storage-internals/csi-node-plugin'),
+  'volume-provisioning': () =>
+    import('../kubernetes-fundamentals/storage-internals/volume-provisioning'),
+  'static-provisioning': () =>
+    import('../kubernetes-fundamentals/storage-internals/static-provisioning'),
+  'dynamic-provisioning': () =>
+    import('../kubernetes-fundamentals/storage-internals/dynamic-provisioning'),
+  'immediate-binding': () => import('../kubernetes-fundamentals/storage-internals/immediate-binding'),
+  waitforfirstconsumer: () =>
+    import('../kubernetes-fundamentals/storage-internals/waitforfirstconsumer'),
+  'volume-attach-and-mount-lifecycle': () =>
+    import('../kubernetes-fundamentals/storage-internals/volume-attach-and-mount-lifecycle'),
+  'csi-volume-expansion': () =>
+    import('../kubernetes-fundamentals/storage-internals/csi-volume-expansion'),
+  'volume-snapshots': () => import('../kubernetes-fundamentals/storage-internals/volume-snapshots'),
+
+  // Stateful workloads
+  'statefulset-architecture': () =>
+    import('../kubernetes-fundamentals/stateful-workloads/statefulset-architecture'),
+  'stable-network-identity': () =>
+    import('../kubernetes-fundamentals/stateful-workloads/stable-network-identity'),
+  'ordered-deployment-and-termination': () =>
+    import('../kubernetes-fundamentals/stateful-workloads/ordered-deployment-and-termination'),
+  'volumeclaimtemplates-and-per-replica-storage': () =>
+    import('../kubernetes-fundamentals/stateful-workloads/volumeclaimtemplates-and-per-replica-storage'),
+  'running-databases-on-kubernetes': () =>
+    import('../kubernetes-fundamentals/stateful-workloads/running-databases-on-kubernetes'),
+  'statefulset-scaling-and-updates': () =>
+    import('../kubernetes-fundamentals/stateful-workloads/statefulset-scaling-and-updates'),
+  'stateful-failure-and-recovery': () =>
+    import('../kubernetes-fundamentals/stateful-workloads/stateful-failure-and-recovery'),
+
+  // Data reliability & recovery
+  'backup-fundamentals': () =>
+    import('../kubernetes-fundamentals/data-reliability/backup-fundamentals'),
+  'snapshot-based-recovery': () =>
+    import('../kubernetes-fundamentals/data-reliability/snapshot-based-recovery'),
+  'backup-consistency-models': () =>
+    import('../kubernetes-fundamentals/data-reliability/backup-consistency-models'),
+  'rpo-and-rto-in-kubernetes': () =>
+    import('../kubernetes-fundamentals/data-reliability/rpo-and-rto-in-kubernetes'),
+  'restore-workflows-and-verification': () =>
+    import('../kubernetes-fundamentals/data-reliability/restore-workflows-and-verification'),
+  'kubernetes-disaster-recovery-limits': () =>
+    import('../kubernetes-fundamentals/data-reliability/kubernetes-disaster-recovery-limits'),
+
+  // Production storage operations
+  'pvc-pending-troubleshooting': () =>
+    import('../kubernetes-fundamentals/storage-operations/pvc-pending-troubleshooting'),
+  'volume-attach-and-mount-failures': () =>
+    import('../kubernetes-fundamentals/storage-operations/volume-attach-and-mount-failures'),
+  'multi-attach-and-rwo-constraints': () =>
+    import('../kubernetes-fundamentals/storage-operations/multi-attach-and-rwo-constraints'),
+  'node-failure-and-volume-recovery': () =>
+    import('../kubernetes-fundamentals/storage-operations/node-failure-and-volume-recovery'),
+  'storage-capacity-and-disk-pressure': () =>
+    import('../kubernetes-fundamentals/storage-operations/storage-capacity-and-disk-pressure'),
+  'storage-performance-tuning': () =>
+    import('../kubernetes-fundamentals/storage-operations/storage-performance-tuning'),
+  'storage-observability-and-diagnostics': () =>
+    import('../kubernetes-fundamentals/storage-operations/storage-observability-and-diagnostics'),
 };
 
 /** A concept's metadata merged with its lazily loaded bodies, in metadata order. */
