@@ -13,80 +13,92 @@ Generic primitives work well for concept-first architecture lessons where the go
 - A diagram of Azure RBAC scopes, an Azure Managed Identity flow, an AWS EC2-to-S3 IAM role sequence, or a Kubernetes CSI provisioning flow renders every cloud service and Kubernetes resource with the same abstract symbols (`server`, `storage`, `key`, `identity`, `scope`).
 - Learners studying real-world cloud and Kubernetes architectures benefit from recognizing official service and resource iconography (for example, distinguishing Amazon S3 from Azure Blob Storage in a comparison scene, or recognizing Kubernetes Pods, Services, PVCs, and Ingresses in cluster diagrams) without losing the structural clarity of the existing SVG visual language.
 
-Any solution must preserve ADR-008's invariants: declarative SVG remains the default, structural chrome stays themeable across light and dark modes, accessibility and keyboard navigation remain intact, bundle size stays disciplined, and the simulation engine remains completely decoupled from visual rendering.
+Any solution must preserve ADR-008's invariants: declarative SVG remains the default, structural chrome stays themeable across light and dark modes, accessibility and keyboard navigation remain intact, bundle size stays disciplined ([ADR-007](ADR-007-per-concept-content-loading.md)), and the simulation engine remains completely decoupled from visual rendering.
 
 ## Decision
 
-Introduce a **centralized, curated, provider-specific SVG visual system** layered on top of ADR-008's declarative SVG engine, driven by an explicit scene `visualContext`, qualified node asset identifiers, a central asset registry, and a pure visual resolver with guaranteed generic fallback.
+Introduce a **centralized, curated, provider-specific SVG visual system** layered on top of ADR-008's declarative SVG engine, driven by a strict scene-level `visualContext`, qualified node asset identifiers, a minimal runtime asset registry backed by external non-inlined SVG files (`?url&no-inline`), a pure visual resolver, and deterministic generic fallback at both resolution and runtime load boundaries.
 
 This ADR extends [ADR-008](ADR-008-svg-first-visualization.md) and [docs/SVG_VISUALIZATION_STANDARD.md](../SVG_VISUALIZATION_STANDARD.md) without superseding either. Existing scenes without a `visualContext` continue to render identically using generic primitives.
 
 ### 1. Design Principles
 
 1. **Generic concepts stay generic.** Concept-oriented lessons continue using the existing generic SVG primitives (`ScenePrimitive` + Lucide icons).
-2. **AWS-specific scenes use official AWS iconography.** Architecture scenes whose subject is AWS infrastructure use official AWS Architecture Icons.
-3. **Azure-specific scenes use official Azure iconography.** Architecture scenes whose subject is Microsoft Azure infrastructure use official Microsoft Azure Architecture Icons.
-4. **Kubernetes-specific scenes use official Kubernetes iconography.** Architecture scenes whose subject is concrete Kubernetes resources and control-plane components use official Kubernetes visual assets.
-5. **Comparison scenes may combine visual systems.** Multi-provider or cross-platform comparison scenes may opt into a `mixed` visual context combining multiple official systems.
-6. **Lesson metadata alone does not choose the visual system.** Being located inside a provider tab or the Kubernetes domain does not automatically switch a scene away from generic primitives.
-7. **Visual selection reflects the diagram's actual subject.** Authors declare a visual system only when the diagram depicts concrete services or resources from that system.
-8. **Generic fallback is always available.** Every node retains its semantic `ScenePrimitive` type so generic rendering remains available whenever an official asset is absent, omitted, or intentionally generic.
+2. **Official provider icons are visual identity, not architectural semantics.** Connections, boundaries, grouping, statuses, and mandatory text labels explain architecture; icons never replace semantic labels.
+3. **AWS-specific scenes use official AWS iconography** (subject to independent licensing clearance).
+4. **Azure-specific scenes use official Azure iconography** (subject to independent licensing clearance).
+5. **Kubernetes-specific scenes use official Kubernetes iconography** (subject to independent licensing clearance).
+6. **Comparison scenes may combine visual systems.** Multi-provider or cross-platform comparison scenes may opt into a `mixed` visual context combining two or more provider visual systems.
+7. **Lesson metadata alone does not choose the visual system.** Being located inside a provider tab or the Kubernetes domain does not automatically switch a scene away from generic primitives.
+8. **Visual selection reflects the diagram's actual subject.** Authors declare a visual system only when the diagram depicts concrete services or resources from that system.
+9. **Generic fallback is always available.** Every node retains its required semantic `ScenePrimitive` type so generic rendering remains available whenever an official asset is omitted, unverified, deferred, or fails to load at runtime.
 
 **Illustrative examples:**
 
 - An AWS lesson explaining general TLS handshake mechanics retains `generic` icons.
 - A Kubernetes lesson explaining a general architectural pattern (such as replication vs. backup tradeoffs) retains `generic` icons.
-- An AWS S3 request-signing or IAM role diagram uses the appropriate official AWS service icons (e.g., EC2, STS, S3).
+- An AWS IAM role sequence diagram uses official AWS service icons (e.g., EC2, STS, S3) where verified, while keeping link-local IMDS generic.
 - A comparison scene contrasting Amazon S3 and Azure Blob Storage uses a `mixed` visual context combining official AWS and Azure icons.
 
-### 2. Proposed Scene and Node Model
+### 2. Scene and Node Type Model
 
-Extend `src/engines/visualization/types.ts` with backward-compatible, optional visual-system fields:
+Extend `src/engines/visualization/types.ts` with backward-compatible, optional visual-system fields designed so invalid scene contexts are unrepresentable and node metadata is never duplicated:
 
 ```ts
-export type ConcreteVisualSystem =
-  | 'generic'
-  | 'aws'
-  | 'azure'
-  | 'kubernetes';
+export type ProviderVisualSystem = 'aws' | 'azure' | 'kubernetes';
+export type VisualSystem = 'generic' | ProviderVisualSystem;
 
-export type VisualSystem =
-  | ConcreteVisualSystem
-  | 'mixed';
+/**
+ * Strict discriminated union. Invalid combinations (such as a single provider
+ * paired with a conflicting `systems` list, or `mixed` with fewer than two
+ * provider systems) are rejected by TypeScript.
+ */
+export type VisualContext =
+  | { readonly system: 'generic' }
+  | { readonly system: ProviderVisualSystem }
+  | {
+      readonly system: 'mixed';
+      readonly systems: readonly [
+        ProviderVisualSystem,
+        ProviderVisualSystem,
+        ...ProviderVisualSystem[],
+      ];
+    };
 
-export interface VisualContext {
-  system: VisualSystem;
-  /** Required when system === 'mixed' to declare the allowed official systems. */
-  systems?: ConcreteVisualSystem[];
-}
+/**
+ * Qualified `<provider>:<asset-name>` identifier. In implementation,
+ * `ComponentAssetId` is derived from the curated keys of the runtime asset
+ * registry (constrained to `${ProviderVisualSystem}:${string}`).
+ */
+export type QualifiedAssetId = `${ProviderVisualSystem}:${string}`;
 ```
 
-- `SceneDefinition` gains an optional `visualContext?: VisualContext`. When omitted, the scene defaults to `{ system: 'generic' }`, keeping all existing scenes 100% backward-compatible.
-- `SceneNode` retains its required semantic `type: ScenePrimitive` and gains two optional properties:
+- **`SceneDefinition`** gains an optional `visualContext?: VisualContext`. When omitted, the scene defaults to `{ system: 'generic' }`, keeping all existing scene modules 100% backward-compatible with zero changes required.
+- **`SceneNode`** retains its required semantic `type: ScenePrimitive` and gains a single optional property:
 
 ```ts
 export interface SceneNode {
-  // existing fields: id, type, label, position, data, status?
+  id: string;
+  type: ScenePrimitive;
+  label: string;
+  position: { x: number; y: number };
+  data: Record<string, string | number | boolean>;
+  status?: 'active' | 'inactive' | 'error';
+  /** Optional official asset ID; omit to render the generic ScenePrimitive. */
   asset?: ComponentAssetId;
-  visualSystem?: ConcreteVisualSystem;
 }
 ```
 
-- Asset identifiers use a **qualified `<system>:<name>` namespace** so collisions across providers are structurally impossible and the owning visual system is explicit:
+- **No node-level `visualSystem` field.** A node's visual system is deterministically derived from the prefix of its qualified `asset` identifier (`'aws:s3'` → `'aws'`, `'azure:key-vault'` → `'azure'`, `'kubernetes:pod'` → `'kubernetes'`). Omitting `asset` unambiguously selects the generic `ScenePrimitive` icon — generic actors (such as `User`, `Client`, or `IMDS`) do not need an extra flag to remain generic inside a provider scene.
+- **`SceneState.nodeOverrides` excludes `asset`.** `SceneState['nodeOverrides']` remains `Record<string, Partial<Pick<SceneNode, 'status' | 'data' | 'label'>>>`. Component identity does not morph across timeline steps.
+- **Compile-time vs. test-time validation:**
+  - `VisualContext` (discriminated union) and `ComponentAssetId` (derived from registered asset keys via `keyof typeof ASSET_REGISTRY`) give immediate compile-time checks for valid context shapes and valid asset IDs without altering `SceneDefinition`'s non-generic consumer signature across `resolveSceneAtState`, `SvgNode`, `ComponentInspector`, and existing scene modules.
+  - Compile-time cross-checking between `scene.visualContext` and `node.asset` prefixes is a desirable authoring goal (for example, via a small optional authoring helper if it proves ergonomic without complicating existing callers), **without** over-engineering generic parameters onto `SceneDefinition`.
+  - Cross-field invariants — including verifying that every `node.asset` prefix is permitted by `scene.visualContext` and that `mixed.systems` contains at least two *distinct* provider systems — are enforced uniformly across all scenes by a pure validator (`validateSceneVisuals`) executed in automated tests.
 
-```ts
-// Illustrative examples only — not a finalized asset catalog.
-export type ComponentAssetId =
-  | 'aws:s3'
-  | 'azure:blob-storage'
-  | 'kubernetes:pod';
-```
+### 3. Curated Asset Registry and Vite Bundling
 
-Retaining `type: ScenePrimitive` on every `SceneNode` preserves legend grouping (`primitiveRole`), semantic meaning, and deterministic generic fallback even when an official `asset` is declared.
-
-### 3. Curated Asset Registry
-
-Maintain a small, curated asset collection and a single typed registry module rather than vendoring entire third-party icon libraries into the repository.
+Maintain a small, curated asset collection with strict separation between **runtime rendering data** and **governance/provenance documentation**. Do not vendor entire upstream icon libraries and do not introduce a complex asset-loading framework prematurely.
 
 **Proposed directory layout:**
 
@@ -102,80 +114,104 @@ src/engines/visualization/
   visual-resolver.ts
 ```
 
-Each entry in `asset-registry.ts` records:
+**Runtime vs. provenance separation:**
 
-- `id`: qualified `ComponentAssetId` (e.g. `'aws:s3'`).
-- `visualSystem`: owning `ConcreteVisualSystem` (`'aws' | 'azure' | 'kubernetes'`).
-- `assetUrl`: statically imported Vite asset reference (`?url`).
-- `sourcePackage`: exact official icon package/repository name and version/release identifier.
-- `sourceFilename`: verbatim filename inside the upstream package for traceability.
-- `attribution`: copyright/attribution string and license identifier (referencing `ATTRIBUTIONS.md`).
-- `darkModeBackdrop`: optional backdrop hint (e.g. `'none' | 'light-chip' | 'subtle-surface'`) for transparent vendor icons whose strokes or dark fills lose contrast on dark surfaces.
+- **`asset-registry.ts` (runtime — minimal):** Maps each `ComponentAssetId` to only what the browser needs to render:
+  - `url`: statically imported via Vite **`?url&no-inline`** (e.g. `import awsS3Url from './assets/aws/s3.svg?url&no-inline'`).
+  - `opticalInset?`: optional bounded inset (`0 | 1 | 2` px) to optically normalize full-bleed square icons against silhouetted icons inside the fixed icon slot without modifying the vendor SVG.
+  - `darkBackdrop?`: optional override (`'default' | 'none'`) when an icon explicitly opts out of the uniform dark-mode icon container.
+  - The owning `ProviderVisualSystem` is derived from the `<provider>:` key prefix, never duplicated as a separate mutable property.
+  - Legal notices, source filenames, and upstream package versions do **not** live in `asset-registry.ts`, keeping audit strings out of the client JS bundle.
+- **`assets/MANIFEST.json` (source of truth for provenance — test/audit only, never imported by runtime app code):** Maps each `ComponentAssetId` to its committed file path, upstream package name, pinned package version/tag/commit SHA, verbatim upstream filename, license/terms reference, and verification date.
+- **`assets/ATTRIBUTIONS.md` (human-readable legal notices):** One concise section per upstream icon package (AWS, Azure, Kubernetes) containing required trademark notices, attribution text, and links to upstream license/brand terms.
 
-Only assets actually referenced by approved scenes are committed. Unused icons are not added speculatively.
+**Why `?url&no-inline` is mandatory:**
 
-### 4. Asset Rendering Strategy (Proposed — Pending Implementation Validation)
+[vite.config.ts](../../vite.config.ts) uses Vite's default `build.assetsInlineLimit` (`4096` bytes). Most Kubernetes SVGs (0.8–3 KB) and many AWS/Azure SVGs (1.5–4 KB) are smaller than 4 KB. Plain `?url` imports would silently inline them as `data:image/svg+xml` strings inside the shared Lesson JS chunk, and a central lookup map prevents tree-shaking. Using `?url&no-inline` forces Vite to emit content-hashed `.svg` files into `dist/assets/` so the shared Lesson chunk stores only short hashed URL strings and browsers fetch only the icons rendered by the active scene.
 
-This ADR proposes keeping vendor SVGs as **external static asset files** imported via Vite `?url` rather than inlining third-party SVG markup into the main diagram DOM:
+**Automated parity checks:**
 
-- **SVG topology and sequence scenes:** render resolved official assets with `<image href={resolved.assetUrl} width={...} height={...} preserveAspectRatio="xMidYMid meet" aria-hidden="true" />` inside the node box (with an optional backdrop `<rect>` when `darkModeBackdrop` requires contrast support).
-- **HTML surfaces (`ComponentInspector` and `ReactFlowScene`):** render resolved official assets with `<img src={resolved.assetUrl} alt="" aria-hidden="true" className="..." />`, falling back to the generic Lucide icon component when resolved to `'generic'`.
+An automated Vitest test enforces 1:1 parity across:
+1. Every key in `asset-registry.ts`,
+2. Every entry in `assets/MANIFEST.json`, and
+3. Every committed `.svg` file under `src/engines/visualization/assets/`.
 
-**Why external asset files are preferred over inline SVG DOM injection:**
+Only assets referenced by approved scenes are committed; unused assets are not added speculatively.
 
-- **Isolation from ID, class, and `<defs>` collisions.** Vendor icon packages routinely contain generic internal IDs (`#a`, `#linear-gradient`, `#clip0`) and scoped `<style>` rules (`.cls-1`). Inlining multiple vendor icons into a single `<svg>` causes cross-icon gradient/clip corruption and CSS leakage across the page. External `<image href>` and `<img>` render each vendor SVG in an isolated document context.
-- **Preserving brand fidelity without polluting structural chrome.** Official icons keep their original multi-color artwork intact, while structural diagram chrome (node cards, borders, selection outlines, focus rings, status indicators, edges, arrowheads, flow outcomes, and boundaries) remains controlled exclusively by `svg-tokens.ts` and theme CSS variables.
-- **Light/dark theme legibility.** Transparent vendor SVGs with dark strokes or low-contrast fills can become unreadable on dark surfaces. An optional registry-declared neutral backdrop pill/chip behind the icon preserves legibility without editing vendor artwork or inverting brand colors.
-- **Loading and fallback behavior.** Static Vite `?url` imports bundle locally from the same origin (zero external network fetches, honoring [ADR-001](ADR-001-frontend-only.md)), and because every node still carries `type: ScenePrimitive`, missing or unresolved assets deterministically fall back to the generic Lucide primitive.
+### 4. Asset Rendering Strategy and Runtime Fallback (Proposed — Pending Implementation Validation)
 
-This rendering strategy is **proposed, not yet finalized**. Implementation must validate browser rendering (`<image href>` scaling, crispness at retina/standard DPI, Vite `assetsInlineLimit` data-URI vs. emitted-file behavior, and jsdom test ergonomics) before acceptance.
+Vendor SVGs remain **external static asset files** rather than inlined DOM markup:
+
+- **SVG topology and sequence scenes:** Render resolved official assets with `<image href={resolved.url} width={...} height={...} preserveAspectRatio="xMidYMid meet" aria-hidden="true" />` inside a small fallback wrapper (`SvgAssetIcon`) using integer coordinates inside the node's icon slot.
+- **HTML surfaces (`ComponentInspector` and `ReactFlowScene`):** Render resolved official assets with `<img src={resolved.url} alt="" aria-hidden="true" decoding="async" />` inside a matching fallback wrapper (`HtmlAssetIcon`).
+
+**Key rendering requirements:**
+
+- **Isolation from SVG DOM collisions and theme-token compliance:** Vendor SVGs frequently reuse generic internal IDs (`#a`, `#linear-gradient`, `#clip0`) and class names (`.cls-1`), and embed hardcoded `#hex` brand fills. External `<image href>` and `<img>` isolate each vendor SVG in its own document context, preventing cross-icon gradient/clip corruption and preserving the existing `svg-scene.test.tsx` invariant that host SVG chrome contains zero hardcoded `#hex` fill/stroke values.
+- **Runtime `onError` fallback:** Resolver-level fallback catches omitted or unregistered asset IDs, while `onError` handlers on `<image>` and `<img>` catch runtime fetch or decode failures (such as network drops or stale deployment chunks) and cleanly fall back to the node's generic Lucide `ScenePrimitive` icon rather than leaving an empty box or broken image icon.
+- **Consistent dark-mode icon container:** Dark mode (`src/styles/globals.css`) sets `--color-surface` to `#0a0a0a`. Rather than scattering ad-hoc white chips behind individual assets, render a **uniform, theme-tokenized icon container** (defined via CSS token in `globals.css` / `svg-tokens.ts` — subtle/transparent in light mode, soft neutral elevated tile in dark mode) behind official icons so dark-stroke vendor artwork remains legible and adjacent icons share a cohesive visual rhythm.
+- **Optical sizing normalization:** Official AWS icons are typically full-bleed colored squares, whereas Azure and Kubernetes icons are irregular silhouettes with varying internal margins. Bounding optional `opticalInset` (`0–2 px`) inside the fixed icon slot balances visual weight across providers in `mixed` scenes without altering any vendor SVG file.
+- **Vercel asset paths, SPA rewrites, and immutable caching:** Content-hashed `.svg` files emitted to `dist/assets/` are served directly from the filesystem by Vercel with long-lived immutable browser caching. Note that `vercel.json` currently uses a catch-all rewrite (`"/(.*)" -> "/index.html"`). During implementation (not in this ADR task), `vercel.json` should be reviewed so missing `/assets/*` requests return a real `404` instead of `200 text/html` — ensuring stale-chunk misses trigger `onError` fallback reliably — and explicit `Cache-Control: public, max-age=31536000, immutable` headers on `/assets/*` should be verified.
+
+This rendering strategy remains **proposed until validated** in real browsers and production builds before ADR acceptance or pilot rollout.
 
 ### 5. Centralized Visual Resolver
 
-All visual-system selection flows through a single pure function in `src/engines/visualization/visual-resolver.ts`:
+All visual resolution flows through a single pure function in `src/engines/visualization/visual-resolver.ts`:
 
 ```ts
 resolveNodeVisual(
-  node: Pick<SceneNode, 'type' | 'asset' | 'visualSystem'>,
+  node: Pick<SceneNode, 'type' | 'asset'>,
   visualContext?: VisualContext,
 ): ResolvedNodeVisual
 ```
 
 **Expected behavior:**
 
-1. **Generic context resolves to generic primitives.** When `visualContext` is omitted or `{ system: 'generic' }`, nodes resolve to their generic `ScenePrimitive` icon.
-2. **Matching official assets resolve to registry entries.** When a node declares an `asset` whose system matches the active `visualContext`, the resolver returns the registered asset metadata and URL.
-3. **Missing assets fall back gracefully.** If a node omits `asset` or references an unregistered asset at runtime, the resolver deterministically falls back to the generic `ScenePrimitive` icon rather than throwing or rendering a broken image.
-4. **Mismatched asset/context combinations fail validation.** Validation tests (and a dedicated pure validator helper) reject scenes where a node declares an asset incompatible with `scene.visualContext` (for example, an `aws:*` asset inside an `{ system: 'azure' }` scene, or an undeclared provider inside a `mixed` scene).
-5. **Mixed scenes support multiple qualified systems.** When `visualContext.system === 'mixed'`, nodes may resolve assets from any system listed in `visualContext.systems`.
-6. **Generic actors may stay generic inside provider scenes.** Actors such as `User`, `Client`, or an external CI system can omit `asset` (or explicitly set `visualSystem: 'generic'`) and render with generic primitives alongside official provider icons.
+1. **Generic context resolves to generic primitives.** When `visualContext` is omitted or `{ system: 'generic' }`, nodes resolve to their generic `ScenePrimitive` Lucide icon.
+2. **Matching official assets resolve to registry entries.** When `node.asset` is present, registered, and its `<provider>:` prefix is permitted by `visualContext`, the resolver returns the registered asset entry (URL + optional optical/backdrop hints) alongside the fallback `ScenePrimitive`.
+3. **Missing or unknown assets fall back deterministically.** When `node.asset` is omitted or not present in the registry, the resolver returns the generic `ScenePrimitive` without throwing.
+4. **Incompatible asset/context pairs fail validation and fall back safely.** `validateSceneVisuals(scene)` rejects any scene where a node's `asset` prefix does not match `scene.visualContext` (or where `mixed.systems` has duplicate/insufficient providers). If reached defensively at runtime, `resolveNodeVisual` falls back to generic rather than rendering a mismatched icon.
+5. **Mixed scenes allow declared provider systems.** When `visualContext.system === 'mixed'`, nodes may resolve registered assets from any provider listed in `visualContext.systems`.
+6. **Generic actors remain generic inside provider scenes.** Any node omitting `asset` resolves to its generic `ScenePrimitive` icon alongside official provider nodes.
 
-Renderers must consume `ResolvedNodeVisual` from `resolveNodeVisual` rather than scattering `if (system === 'aws')` conditionals across components.
+Renderers must consume `ResolvedNodeVisual` from `resolveNodeVisual` rather than scattering provider conditionals across components.
 
-### 6. Integration Boundaries
+### 6. Layout Geometry, Status Semantics, and Integration Boundaries
 
-Implementation will evaluate and integrate across the existing visualization modules while preserving all public contracts:
+Integrating official icons introduces two concrete UI/layout requirements identified in the existing codebase:
+
+1. **Preserve generic geometry; add a dedicated provider-icon slot:**
+   - Keep `GEOMETRY.iconSize = 15` (`src/engines/visualization/svg/svg-tokens.ts`) unchanged for generic Lucide nodes so zero existing generic scenes shift or regress.
+   - Define a dedicated provider-icon slot (e.g., `20×20` glyph inside a `24×24` container) for nodes rendering an official asset, accounted for in `svg-layout.ts` / `nodeWidth()` so edges clip cleanly to node borders and labels never collide.
+   - Update `SvgSequenceScene` (`src/engines/visualization/svg/svg-sequence-scene.tsx`), which currently hardcodes `ACTOR_W = 150`, `ACTOR_H = 40`, `14×14` icons, and `x + 8` centered text. Actor header width/height and text alignment must accommodate the provider-icon slot so wrapped two-line labels (such as `"Instance Metadata Service"` and `"Instance metadata (IMDSv2)"`) never overlap the icon.
+2. **Non-`currentColor` status indicators:**
+   - External `<image>` icons cannot inherit `currentColor`, so Lucide `style.icon` tinting no longer conveys status (`active`, `inactive`, `error`) on official-icon nodes.
+   - Both `SvgNode` and `SvgSequenceScene` must convey status through non-icon signals: node border/fill tokens, `nodeOpacity(status)` for `inactive`, and a consistent status indicator badge/dot for `active` and `error` (bringing `SvgSequenceScene` up to parity with `SvgNode`), keeping color paired with distinct shape/border cues.
+
+**Module touchpoints:**
 
 | File | Current responsibility | Proposed touchpoint |
 |---|---|---|
-| `src/engines/visualization/types.ts` | `SceneDefinition`, `SceneNode`, `ScenePrimitive`, `resolveSceneAtState` | Add optional `VisualContext`, `ConcreteVisualSystem`, `VisualSystem`, `ComponentAssetId`, and optional `asset` / `visualSystem` on `SceneNode`. |
-| `src/engines/visualization/svg/svg-primitives.tsx` | Renders `SvgNode`, `SvgEdge`, `SvgBoundary` | Render `<image href>` (plus optional contrast backdrop) when `resolveNodeVisual` returns an official asset; otherwise render existing Lucide primitive. |
-| `src/engines/visualization/svg/svg-topology-scene.tsx` | Computes topology layout and renders `SvgNode` | Pass `scene.visualContext` (or pre-resolved node visuals) to `SvgNode`. |
-| `src/engines/visualization/svg/svg-sequence-scene.tsx` | Renders sequence actor headers, lifelines, messages, boundaries | Resolve each actor icon through `resolveNodeVisual` and render `<image href>` or Lucide fallback at sequence header icon geometry. |
-| `src/engines/visualization/component-inspector.tsx` & `visualization-region.tsx` | Renders selected node header, status, data fields, connections | Pass `scene.visualContext` from `VisualizationRegion` to `ComponentInspector`; render `<img>` for official assets or Lucide fallback so inspector iconography matches the canvas. |
-| `src/engines/visualization/react-flow-scene.tsx` | Lazy-loaded HTML node/edge renderer for `interaction: 'graph'` | Resolve node visual via `resolveNodeVisual` and render `<img>` or Lucide fallback inside `PrimitiveNode`. |
-| `src/engines/visualization/scene-renderer.tsx` | Dispatches static SVG vs. lazy React Flow | Preserve existing dispatch contract (`SceneRendererProps`); no provider-specific branching here. |
-| `src/engines/visualization/svg/svg-tokens.ts` & `svg-layout.ts` | Node geometry (`GEOMETRY.iconSize` = 15px in topology; 14px in sequence), padding, width calculation | Evaluate whether official icons need slightly larger icon box sizing (e.g. 18–20px) for legibility without breaking existing scene layouts. |
+| `src/engines/visualization/types.ts` | `SceneDefinition`, `SceneNode`, `ScenePrimitive`, `resolveSceneAtState` | Add `ProviderVisualSystem`, `VisualSystem`, discriminated `VisualContext`, `QualifiedAssetId` / `ComponentAssetId`, optional `SceneDefinition.visualContext`, optional `SceneNode.asset`. Keep `SceneState.nodeOverrides` unchanged. |
+| `src/engines/visualization/svg/svg-tokens.ts` & `svg-layout.ts` | Generic `GEOMETRY.iconSize = 15`, `nodeWidth()`, edge clipping, boundaries | Preserve generic geometry; add provider-icon slot metrics and dark-mode icon container token. |
+| `src/engines/visualization/svg/svg-primitives.tsx` | `SvgNode`, `SvgEdge`, `SvgBoundary` | Render `SvgAssetIcon` (`<image href>` + `onError` fallback + uniform container) for resolved official assets; ensure status indicators do not rely on icon tinting. |
+| `src/engines/visualization/svg/svg-topology-scene.tsx` | Computes layout and renders `SvgNode` | Pass `scene.visualContext` (or pre-resolved visuals) into layout and `SvgNode`. |
+| `src/engines/visualization/svg/svg-sequence-scene.tsx` | Sequence actor headers, lifelines, messages, boundaries | Resolve actor visuals via `resolveNodeVisual`, update actor header geometry for provider-icon slots, and add status dot + `nodeOpacity` parity. |
+| `src/engines/visualization/visualization-region.tsx` & `component-inspector.tsx` | Selected node header, status, data fields, connections | Pass optional `visualContext` from `VisualizationRegion` to `ComponentInspector`; render `HtmlAssetIcon` (`<img>` + `onError` fallback) matching the canvas. |
+| `src/engines/visualization/react-flow-scene.tsx` | Lazy-loaded HTML node/edge renderer (`interaction: 'graph'`) | Resolve node visuals via `resolveNodeVisual` and render `HtmlAssetIcon` inside `PrimitiveNode`. |
+| `src/engines/visualization/scene-renderer.tsx` | Dispatches static SVG vs. lazy React Flow | Preserve existing `SceneRendererProps` dispatch contract; zero provider-specific branching here. |
+| `src/engines/visualization/svg/svg-legend.tsx` | Renders flows, statuses, boundaries legend | **Unchanged** unless future implementation evidence demonstrates a concrete requirement; node text labels remain mandatory. |
 
 **Explicitly preserved invariants:**
 
-- Backward compatibility for all existing `SceneDefinition` modules (no required field changes).
+- Backward compatibility for all existing `SceneDefinition` modules.
 - Topology and sequence scene semantics (including `edges.length + 1` sequence state arity).
 - Node selection, `ComponentInspector` connection derivation, and timeline stepping (`TimelineController`).
 - Keyboard navigation (`Tab`, `Enter`, `Space`), visible focus rings distinct from selection borders, and SVG `<title>`/`<desc>` accessibility.
 - **Zero changes to the simulation engine** (`src/engines/simulation/`) or simulation lab bindings.
 
-### 7. Asset Governance and Licensing
+### 7. Asset Governance and Independent Provider Adoption Policy
 
 Candidate upstream sources to evaluate before adding any file:
 
@@ -183,47 +219,60 @@ Candidate upstream sources to evaluate before adding any file:
 - **Azure:** Official Microsoft Azure Architecture Icons package.
 - **Kubernetes:** Official Kubernetes community icon repository (`kubernetes/community/icons`).
 
-**Mandatory pre-addition verification gate** — before any asset is committed to the repository, implementation must verify and document:
+**Mandatory pre-addition verification gate** — before any asset is committed, implementation must verify and record in `MANIFEST.json` and `ATTRIBUTIONS.md`:
 
 1. Authentic official upstream source URL.
 2. Exact package release version, tag, or commit SHA.
-3. License terms and mandatory attribution text.
-4. Brand, trademark, and visual usage guidelines (including clear-space, color preservation, and non-endorsement rules).
-5. Explicit confirmation that redistributing the SVG files inside a public/open repository and frontend bundle is permitted.
+3. Applicable license or terms of use and mandatory attribution text.
+4. Brand, trademark, and visual usage guidelines (clear-space, color preservation, non-endorsement).
+5. Explicit confirmation that redistributing unmodified SVG files inside this repository and its built frontend bundle is permitted under those terms.
 
-**Governance artifacts required in `src/engines/visualization/assets/`:**
+*Note:* AWS Architecture Icons and Microsoft Azure Architecture Icons are distributed under vendor brand/usage terms rather than standard OSI open-source licenses, and Kubernetes community icons are subject to both repository licensing and CNCF trademark guidelines. This ADR makes **no legal conclusion**; each provider's terms must be verified against the exact downloaded package before any file is added.
 
-- `MANIFEST.json` — machine-readable inventory mapping each committed asset path and `ComponentAssetId` to its upstream package version, original filename, license, and verification date.
-- `ATTRIBUTIONS.md` — human-readable trademark notices, license texts/links, and provider attribution statements.
+**Independent per-provider adoption policy:**
 
-**Strict governance rules:**
+Each provider visual system (`aws`, `azure`, `kubernetes`) is cleared and adopted **independently**. If a provider's license or redistribution terms cannot be verified:
 
-- Do **not** assume every file in an upstream repository carries the same license; verify per-package and per-asset terms.
-- Do **not** modify vendor SVG artwork (paths, colors, proportions) and do **not** misrepresent third-party products or imply official endorsement.
+1. **Defer that provider** — do not commit any of its SVG assets.
+2. **Keep its scenes generic** — all scenes for that provider continue using generic `ScenePrimitive` icons cleanly.
+3. **Do not block other independently cleared providers** — cleared providers (for example, Kubernetes or another verified package) may proceed independently.
+4. **Never hotlink third-party assets** — do not work around redistribution limits by loading vendor SVGs from remote URLs or CDNs (violates [ADR-001](ADR-001-frontend-only.md)).
+
+**Strict artwork rules:**
+
+- Do **not** assume every file in an upstream repository carries identical licensing terms.
+- Do **not** modify vendor SVG artwork (paths, colors, proportions) and do **not** misrepresent third-party products or imply vendor endorsement.
+
+### 8. Performance and Scalability Expectations
+
+- **Initial bundle impact:** With `?url&no-inline`, vendor SVG bodies never enter the shared Lesson JS chunk. Each registered entry contributes only a small hashed URL string and optional layout hint (~50–80 bytes raw). At 100–200 curated icons, total registry overhead in the Lesson chunk remains roughly 5–15 KB raw (~2–4 KB gzip).
+- **Network requests and caching:** Unused icons trigger **zero** network requests. Opening a migrated scene fetches only the unique SVGs rendered by that scene (typically 3–8 small files, 1–5 KB each, multiplexed over HTTP/2 and cached immutably by content hash).
+- **SVG rendering and React re-renders:** `resolveNodeVisual` is an `O(1)` map lookup; external `<image>` nodes add no inline `<path>`/`<defs>` DOM trees to the SVG, keeping DOM size and React reconciliation costs flat.
+- **Threshold for future registry splitting:** Do **not** build a dynamic asset-loading framework upfront. Revisit splitting `asset-registry.ts` into per-provider dynamic loaders only if measured growth crosses a concrete threshold — specifically, **>200 registered assets** or **>15 KB raw registry overhead** in the shared Lesson chunk.
 
 ## Consequences
 
 ### Benefits
 
-- Concrete cloud and Kubernetes diagrams become immediately recognizable to practicing engineers while retaining Engineering Atlas's clean, consistent diagram chrome.
-- Concept-first generic lessons stay visually uncluttered and distinct from provider-specific architecture scenes.
-- A single registry and pure resolver prevent ad-hoc icon imports, duplicated conditionals, and provider drift across SVG topology, SVG sequence, inspector, and React Flow surfaces.
-- Keeping vendor SVGs as external curated assets prevents SVG DOM ID/style collisions and avoids bloating the repository or bundle with thousands of unused icons.
-- Governance artifacts (`MANIFEST.json`, `ATTRIBUTIONS.md`) make license compliance auditable in code review.
+- Concrete cloud and Kubernetes diagrams become immediately recognizable to practicing engineers while retaining Engineering Atlas's clean, themeable diagram chrome and mandatory text labels.
+- Concept-first generic lessons remain uncluttered and visually distinct from provider-specific architecture scenes.
+- A strict discriminated `VisualContext` and prefix-derived `ComponentAssetId` eliminate redundant node fields and illegal context states.
+- `?url&no-inline` prevents silent data-URI bundle bloat in the shared Lesson chunk while enabling immutable browser caching.
+- Independent per-provider licensing clearance ensures a licensing block on one vendor never stalls the entire initiative.
+- Separating runtime registry data from `MANIFEST.json` and `ATTRIBUTIONS.md` avoids triple maintenance and keeps legal provenance strings out of client JS.
 
 ### Trade-offs
 
-- **Geometry tension:** Current SVG nodes allocate 15×15 px (`svg-tokens.ts`) in topology scenes and 14×14 px in sequence actor headers (`svg-sequence-scene.tsx`). Detailed multi-color provider icons may lose legibility at 14–15 px, potentially requiring careful geometry tuning during implementation.
-- **Theme contrast complexity:** Multi-color vendor icons cannot inherit `currentColor` like monochrome Lucide icons; dark-mode legibility depends on explicit backdrop metadata and visual QA.
-- **Maintenance surface:** Official cloud icon sets evolve periodically; keeping the catalog curated reduces churn, but updates still require manual verification against `MANIFEST.json`.
-- **Two-part authoring model:** Provider scenes require declaring both `visualContext` and per-node `asset` IDs (validated by tests), adding a small authoring step over generic scenes.
+- **Geometry maintenance:** Supporting a larger provider-icon slot alongside `15 px` generic icons adds a conditional geometry path in `svg-layout.ts` and requires updating `SvgSequenceScene` actor header sizing plus fixing existing tight coordinates (such as `rbacScopeScene`).
+- **Status signaling:** Losing `currentColor` icon tinting on official assets requires explicit non-tint status indicators across both topology and sequence renderers.
+- **Runtime fetch surface:** External `.svg` files introduce a network load boundary (mitigated by `onError` fallback and Vite content hashing) and require static disk/build tests since jsdom does not decode `<image>` URLs.
+- **Catalog curation overhead:** Official cloud icon sets evolve over time; updating pinned releases requires re-verifying `MANIFEST.json` and visual contrast.
 
 ### Mitigations
 
-- Enforce registry integrity, `MANIFEST.json` parity, and `visualContext`–`asset` compatibility via automated Vitest checks.
-- Keep `ScenePrimitive` mandatory on every node so generic fallback is always deterministic and zero-crash.
-- Migrate scenes selectively in tiers rather than rewriting existing scenes wholesale.
-- Validate light/dark contrast and icon legibility on real viewports before promoting the initiative past pilot scenes.
+- Enforce registry/manifest/disk 1:1 parity, SVG XML security validation, non-inlining build checks, and cross-domain scene validation (including Kubernetes Slices 3A–3D) in CI.
+- Keep `ScenePrimitive` mandatory and pair resolver fallback with runtime `onError` fallback so a missing or failed icon never breaks a lesson.
+- Roll out selectively in small, independently reviewable slices.
 
 ## Alternatives Considered
 
@@ -231,85 +280,103 @@ Candidate upstream sources to evaluate before adding any file:
 
 Continue representing all AWS, Azure, and Kubernetes services with the 19 generic `ScenePrimitive` icons in `src/engines/visualization/primitives.tsx`.
 
-- **Cost:** Zero new assets, zero licensing review, and uniform monochrome theming.
-- **Why not preferred:** Fails to build visual pattern recognition for real infrastructure services, particularly in provider-specific identity/storage flows and side-by-side AWS vs. Azure comparisons where identical generic icons obscure architectural distinctions.
+- **Cost:** Zero new assets, zero licensing review, uniform monochrome theming.
+- **Why not preferred:** Fails to build visual pattern recognition for real infrastructure services, especially in provider-specific IAM/storage flows and AWS vs. Azure comparisons where identical generic symbols obscure concrete resource distinctions.
 
-### 2. Inline vendor SVGs directly into the main SVG DOM (or wrap as JSX components)
+### 2. Inline vendor SVGs into the main SVG DOM (SVGR / JSX components)
 
-Import vendor SVGs as React components (e.g., via SVGR or manual TSX conversion) and render their `<path>`/`<defs>` elements directly inside the host `<svg>`.
+Convert vendor SVGs into React components and render their `<path>`/`<defs>` elements directly inside the host `<svg>`.
 
-- **Cost:** Avoids `<image href>` indirection and theoretically permits CSS targeting.
-- **Why not preferred:** Introduces high risk of internal SVG `id` (`#a`, `#grad-1`), `<clipPath>`, and `<style>` class collisions across multiple icons in the same SVG; risks violating vendor trademark rules against altering artwork; adds a build plugin or manual conversion step; and increases JS bundle overhead compared to static asset references.
+- **Cost:** Avoids external asset requests and renders inline DOM in jsdom.
+- **Why not preferred:** High risk of internal SVG `id` (`#a`, `#grad-1`), `<clipPath>`, and `.cls-*` collisions across icons in the same diagram; injects hardcoded `#hex` fills into the host SVG DOM (breaking the `svg-scene.test.tsx` token invariant); increases JS bundle size; and risks violating vendor brand rules against modifying SVG markup.
 
-### 3. Runtime URL or CDN lookup instead of compile-time Vite imports
+### 3. Runtime CDN or untyped `public/` URL lookup
 
-Load official icons at runtime from a remote CDN or an unverified `public/` string path.
+Load official icons from remote vendor URLs/CDNs or unverified string paths under `public/`.
 
-- **Cost:** Keeps asset paths out of the TypeScript module graph.
-- **Why not preferred:** Remote CDNs violate Engineering Atlas's self-contained, same-origin frontend posture ([ADR-001](ADR-001-frontend-only.md)) and create broken-diagram failure modes offline or behind corporate proxies. Untyped `public/` strings bypass Vite hashing and TypeScript existence checks, allowing broken asset links to ship silently.
+- **Cost:** Keeps assets outside Vite's module graph.
+- **Why not preferred:** Remote CDNs violate [ADR-001](ADR-001-frontend-only.md) (offline/self-contained frontend) and fail behind restricted networks. Untyped `public/` strings bypass TypeScript existence checks and Vite content hashing, risking silent broken images and stale browser caches.
 
-### 4. Scattered provider conditionals in renderers instead of a central registry and resolver
+### 4. Dynamic per-provider asset-loading framework upfront
 
-Let each renderer (`SvgNode`, `SvgSequenceScene`, `ComponentInspector`, `ReactFlowScene`) inspect provider fields or import icons directly.
+Build an async registry loader that fetches per-provider manifests/chunks on demand before rendering a scene.
 
-- **Cost:** Appears faster for the first single scene.
-- **Why not preferred:** Duplicates fallback logic, dark-mode backdrop rules, and asset mapping across four surfaces, virtually guaranteeing visual divergence between the diagram canvas and the component inspector. A centralized registry and pure `resolveNodeVisual` function keep all four surfaces consistent and trivially unit-testable.
+- **Cost:** Avoids even ~5–15 KB of URL map strings in the shared Lesson chunk.
+- **Why not preferred:** Introduces async loading states, flash-of-fallback-icon jitter, and unnecessary state complexity when `?url&no-inline` already keeps SVG payloads out of JS. Deferred unless the catalog crosses the measured threshold (>200 assets or >15 KB raw registry overhead).
 
 ## Migration Strategy and Compatibility
 
-All schema additions are optional and backward-compatible. No existing scene breaks when the engine lands. Scene adoption proceeds selectively in three tiers:
+All schema additions are optional and backward-compatible. No existing scene breaks when the visualization engine is updated.
+
+### Semantic Selection Rules (All Tiers)
+
+An official provider icon may be used on a node **only** when all four conditions hold:
+
+1. **Exact resource match:** The icon represents the exact concrete service or resource named by the node. Never substitute a visually similar but semantically different resource (for example, do not represent an Azure Blob Container as an Azure Storage Account, or a Kubernetes Pod as a Virtual Machine).
+2. **Verified rights:** The asset's upstream source, version, license, and redistribution rights have been verified and recorded in `MANIFEST.json` and `ATTRIBUTIONS.md`.
+3. **Pedagogical value:** Using the official icon materially improves recognition or comprehension beyond a generic primitive.
+4. **No false vendor ownership:** Using vendor iconography does not imply that a universal engineering concept or abstract actor belongs exclusively to one vendor.
+
+Nodes that do not satisfy all four rules omit `asset` and stay on their semantic `ScenePrimitive`.
 
 ### Tier 1 — Existing Provider-Specific Scenes
 
-Verified existing provider-specific scenes in `src/content/cloud-fundamentals/identity-and-access-management/` to evaluate first:
+Verified existing provider-specific scenes in `src/content/cloud-fundamentals/identity-and-access-management/` to evaluate first (each subject to independent provider licensing clearance and exact asset verification):
 
 - **Azure RBAC:** `rbacScopeScene` (`id: 'azure-rbac-scope-explorer'` in `authorization-and-policies.scenes.ts`) — topology of Azure Management Group, Subscriptions, Resource Groups, Web App, SQL Database, Key Vault, and Virtual Machine.
-- **Azure Managed Identities:** `managedIdentityScene` (`id: 'azure-managed-identity-flow'` in `workload-and-federated-identity.scenes.ts`) — sequence showing an Azure VM, IMDS, Microsoft Entra ID, and Key Vault.
-- **AWS Workload Identity / IAM Roles:** `instanceRoleScene` (`id: 'aws-instance-role-flow'` in `workload-and-federated-identity.scenes.ts`) — sequence showing an EC2 instance, IMDSv2, AWS STS, and Amazon S3. *(Note: `federationScene` in the same file is provider-agnostic and stays generic; no dedicated AWS EKS IRSA scene currently exists in the repo, so future IRSA or workload-identity scenes would be evaluated when authored.)*
-
-Each candidate's actual node list must be verified against the curated asset catalog before migration so every migrated node has an accurate official icon or an intentionally generic fallback (such as IMDS if no official icon exists).
+  - *Required layout fix:* The bottom row currently places `appWeb`, `sqlOrders`, `kvProd`, and `vmTest` at `x: 0, 140, 280, 400` (`y: 390`). With `nodeMinWidth = 124`, `kvProd` (`280..404`) already overlaps `vmTest` (`400..524`) by `4 px`. Bottom-row horizontal spacing (and parent alignment) must be corrected during migration so larger provider-icon nodes have clean separation.
+- **Azure Managed Identities:** `managedIdentityScene` (`id: 'azure-managed-identity-flow'` in `workload-and-federated-identity.scenes.ts`) — sequence depicting an Azure VM, Instance Metadata Service (IMDS), Microsoft Entra ID, and Key Vault.
+  - `imds` represents the link-local endpoint (`169.254.169.254`), not a standalone Azure service resource, and should remain generic (`gateway`) rather than using a substituted Azure icon.
+- **AWS Workload Identity / IAM Roles:** `instanceRoleScene` (`id: 'aws-instance-role-flow'` in `workload-and-federated-identity.scenes.ts`) — sequence depicting an EC2 instance, IMDSv2, AWS STS, and Amazon S3.
+  - `imds` remains generic (`gateway`). `sts` uses an official AWS STS icon only if an exact verified STS asset exists in the pinned AWS package (do not silently substitute a generic IAM icon if STS is distinct).
+  - *Note:* `federationScene` in the same file is provider-agnostic and remains `generic`. No dedicated AWS EKS IRSA scene currently exists in the repository.
 
 ### Tier 2 — Kubernetes-Specific Scenes
 
-Selectively migrate scenes across `src/content/kubernetes-fundamentals/` (`scenes.ts`, `operations-scenes.ts`, `security-scenes.ts`, `storage-scenes.ts`) that depict concrete Kubernetes objects and control-plane components (for example, `clusterArchitectureScene`, `deploymentReplicaSetScene`, `serviceNetworkingScene`, `pvPvcStorageClassScene`, `ingressLifecycleScene`, `networkPolicyScene`, `rbacFlowScene`).
+Selectively evaluate scenes across `src/content/kubernetes-fundamentals/` (`scenes.ts`, `operations-scenes.ts`, `security-scenes.ts`, `storage-scenes.ts`) using the four semantic selection rules above — never by an arbitrary percentage cutoff or merely because a scene lives in the Kubernetes domain.
 
-Do **not** migrate conceptual scenes merely because they live in the Kubernetes domain (for example, general replication vs. backup tradeoffs or abstract failure-mode diagrams where generic primitives communicate the concept more clearly).
+- Strong candidates depict concrete Kubernetes control-plane components and API objects (for example, `clusterArchitectureScene`, `deploymentReplicaSetScene`, `serviceNetworkingScene`, `pvPvcStorageClassScene`, `ingressLifecycleScene`, `networkPolicyScene`, `rbacFlowScene`).
+- Conceptual diagrams dominated by abstract lifecycle stages or patterns (for example, `apiRequestLifecycleScene`, `reconciliationLoopScene`, `replicationVsBackupScene`, `blueGreenCanaryScene`) should remain `generic`.
 
 ### Tier 3 — New Comparison Scenes (Selective)
 
-Consider authoring targeted `mixed` comparison scenes only where side-by-side visual contrast materially improves understanding, such as:
+Consider authoring targeted `mixed` comparison scenes only where side-by-side visual contrast materially improves learning and both providers are independently cleared, such as:
 
 - Amazon EC2 vs. Azure Virtual Machines
 - Amazon S3 vs. Azure Blob Storage
 - Amazon VPC vs. Azure Virtual Network
 - AWS Application Load Balancer vs. Azure Application Gateway
 
-**Semantic accuracy rule:** Never substitute a visually similar but semantically wrong official asset. For example, do not represent an Azure Blob Container using the Azure Storage Account icon, and do not represent a Kubernetes Pod using a Virtual Machine icon. When no semantically accurate official asset exists for a specific sub-resource or abstract actor, fall back to the generic `ScenePrimitive`.
-
 ## Validation and Testing Expectations
 
-Implementation must ship with automated tests and manual QA covering:
+Validation is split explicitly between **automated CI checks** and **manual visual/accessibility QA** because jsdom does not fetch, decode, or rasterize external SVG `<image>` URLs.
 
-1. **Registry metadata and key validation:** Every registry entry has a well-formed `<system>:<name>` ID matching its `visualSystem`, complete attribution/source metadata, and a matching entry in `MANIFEST.json`.
-2. **SVG asset validity:** Committed `.svg` files are valid XML/SVG, contain no `<script>` tags or external `http(s)://` references, and have an explicit `viewBox`.
-3. **Deterministic resolver behavior:** Pure unit tests for `resolveNodeVisual` covering identical input → identical output across all visual systems.
-4. **Context/asset compatibility:** Scene validation tests reject incompatible `asset` + `visualContext` combinations across all registered scenes.
-5. **Generic fallback behavior:** Omitted `visualContext`, omitted `asset`, explicit `visualSystem: 'generic'`, and unknown asset IDs all deterministically resolve to `ScenePrimitive` fallback.
-6. **Mixed-system scenes:** `visualContext: { system: 'mixed', systems: [...] }` resolves qualified assets from declared systems while rejecting undeclared systems.
-7. **Icon sizing and layout geometry:** Unit tests verify node widths, icon bounds, and label alignment do not clip or overlap in topology and sequence scenes.
-8. **Renderer, inspector, and React Flow integration:** Component tests verify `<image href>` in `SvgTopologyScene` and `SvgSequenceScene`, and `<img>` in `ComponentInspector` and `ReactFlowScene`, with matching fallback behavior.
-9. **Keyboard and ARIA behavior:** Focus order (`Tab`), activation (`Enter`/`Space`), `aria-pressed`, `<title>`/`<desc>`, and `aria-hidden` on decorative icons remain intact.
-10. **Light and dark theme visual QA:** Verify every migrated official asset (with and without dark-mode backdrop) has clear visual contrast in both themes.
-11. **Responsive visual QA:** Verify layout, readability, and horizontal scroll containment at `390×844` (mobile) and `1440×900` (desktop).
+### Automated Testing
 
-## Open Questions and Future Considerations
+1. **Type compatibility:** Verify strict discriminated `VisualContext` union behavior, registry-derived `ComponentAssetId` typing, exclusion of `asset` from `SceneState.nodeOverrides`, and backward compatibility of existing scenes under `tsc -b --noEmit`.
+2. **Resolver behavior:** Pure unit tests for `resolveNodeVisual` covering determinism, omitted/generic contexts, matching single-provider and `mixed` contexts, generic actors omitting `asset`, unknown asset fallback, and defensive fallback on context mismatch.
+3. **Registry, manifest, and file parity:** Verify 1:1 parity across `asset-registry.ts` keys, `assets/MANIFEST.json` entries, and `.svg` files on disk, plus `<provider>:<name>` prefix validity and complete provenance fields in `MANIFEST.json`.
+4. **SVG XML validity and security checks:** Node-side static tests parse every committed `.svg` file and assert well-formed XML, explicit `viewBox`, zero `<script>` elements, zero inline event-handler attributes (`on*`), and zero external `http(s)://` references.
+5. **Runtime loading fallback:** Component tests for `SvgTopologyScene`, `SvgSequenceScene`, `ComponentInspector`, and `ReactFlowScene` verify `<image href>` / `<img>` rendering with `aria-hidden="true"` / `alt=""` and verify that dispatching an `error` event falls back cleanly to the generic Lucide `ScenePrimitive`.
+6. **Cross-domain scene validation (including Kubernetes Slices 3A–3D):** Run `validateSceneVisuals` across every loaded concept in **both** Cloud Fundamentals and Kubernetes Fundamentals — closing the existing gap where `src/content/kubernetes-fundamentals/index.test.ts` currently validates only Slice 3D loaded scenes while skipping Slices 3A–3C.
+7. **Layout and status invariants:** Unit tests confirm generic node geometry is unchanged, provider-icon slot widths/edge clipping work without overlap (including fixed `rbacScopeScene` coordinates and `SvgSequenceScene` headers), host SVG chrome retains zero hardcoded `#hex` fills/strokes, and status badges/opacity render on official-icon nodes.
+8. **Vite non-inlining and production build checks:** Verify `npm run build` emits content-hashed `.svg` files under `dist/assets/` and that vendor SVG payloads are not base64/UTF-8 data-URI inlined into the shared Lesson JS chunk.
 
-Because this ADR is **Proposed**, the following decisions remain open and must be resolved explicitly before implementation begins:
+### Manual QA
 
-1. **Final upstream package versions:** Which exact AWS Architecture Icons release, Microsoft Azure Architecture Icons release, and Kubernetes community icon commit/tag will be pinned in `MANIFEST.json`?
-2. **Curated initial inventory:** Which exact `ComponentAssetId` entries make up the Tier 1 and Tier 2 launch set, and which nodes (e.g., IMDS, generic client/user, external CI) intentionally stay generic?
-3. **Rendering strategy validation:** Does Vite `?url` + SVG `<image href>` render crisply across Chromium, Firefox, and WebKit (including under Vite's `assetsInlineLimit` data-URI vs. emitted-file behavior and in jsdom/Vitest), and should official icons use a larger icon slot than the current 14–15 px?
-4. **Redistribution and trademark clearance:** Do the current license and trademark guidelines for AWS, Microsoft Azure, and Kubernetes icons all permit committing curated unmodified SVGs into this repository and serving them in the built frontend bundle? If any provider restricts redistribution, that provider's icons must be deferred or omitted.
-5. **Mixed-system validation rules:** Should `visualContext.systems` be strictly required whenever `system === 'mixed'` (with at least two distinct non-generic systems), and is `'generic'` implicitly always allowed for actors inside `'mixed'` and single-provider scenes?
-6. **Dark-mode treatment for transparent vendor assets:** What uniform backdrop token (e.g., a subtle light badge or surface chip from `svg-tokens.ts`) provides adequate contrast for dark-line Azure/AWS/Kubernetes icons in dark mode without clashing with light mode?
-7. **Follow-up documentation updates:** Once this ADR is accepted and implemented, `docs/SVG_VISUALIZATION_STANDARD.md` and `docs/ARCHITECTURE.md` should be updated to document `visualContext`, `asset`, and governance procedures; [ADR-008](ADR-008-svg-first-visualization.md) remains `Accepted` and requires no modification.
+1. **Light and dark mode:** Visually inspect every migrated official asset in both themes to confirm contrast inside the uniform dark-mode icon container without harsh clashing in light mode.
+2. **Optical sizing:** Compare icon visual weight across AWS, Azure, and Kubernetes icons (especially in `mixed` scenes) and tune bounded `opticalInset` values where needed.
+3. **Responsive viewports:** Verify readability, icon crispness, and horizontal scroll containment at `390×844` (mobile) and `1440×900` (desktop).
+4. **Keyboard and accessibility:** Tab through migrated topology and sequence diagrams, verify visible focus rings distinct from selection borders, `Enter`/`Space` selection, `ComponentInspector` parity, and screen-reader announcements (confirming decorative icons are silent and labels remain primary).
+5. **Vercel preview deployment:** Verify hashed `.svg` assets load with expected caching headers on a real Vercel preview build and confirm missing/stale `/assets/*` paths do not break fallback behavior.
+
+## Unresolved Decisions and Prerequisites for Acceptance
+
+This ADR remains **`Proposed`**. It must not be promoted to `Accepted` — and no vendor SVG assets or renderer changes may land — until the following prerequisites are resolved explicitly:
+
+1. **Per-provider licensing and redistribution verification:** Complete legal/policy review of the exact AWS Architecture Icons package, Microsoft Azure Architecture Icons package, and Kubernetes community icons (`kubernetes/community/icons`). Record which providers are cleared for repository redistribution and which (if any) must be deferred under the independent adoption policy.
+2. **Pinned upstream package versions and initial curated inventory:** Pin exact release versions/tags/commit SHAs in `MANIFEST.json` and finalize the exact `ComponentAssetId` list for Tier 1 (and any cleared Tier 2 pilot), confirming which nodes (such as `imds`) stay generic.
+3. **Rendering strategy and Vite `?url&no-inline` validation:** Verify in a spike or pilot build that Vite 8 emits separate hashed `.svg` files for `?url&no-inline` imports (zero data-URI inlining into JS) and that SVG `<image href>` renders crisply across Chromium, Firefox, and WebKit.
+4. **Geometry and dark-mode container validation:** Confirm exact provider-icon slot dimensions (`20×20` / `24×24`), updated `SvgSequenceScene` actor box sizing, and the exact CSS token for the uniform dark-mode icon container against `#0a0a0a` surfaces.
+5. **Vercel rewrite and caching review:** Confirm whether `vercel.json` should exclude `/assets/*` from the SPA HTML rewrite and set explicit immutable `Cache-Control` headers as part of renderer implementation.
+6. **Follow-up documentation updates:** Once accepted and implemented, update [docs/SVG_VISUALIZATION_STANDARD.md](../SVG_VISUALIZATION_STANDARD.md) and [docs/ARCHITECTURE.md](../ARCHITECTURE.md) to document `visualContext`, `asset`, and asset governance. [ADR-008](ADR-008-svg-first-visualization.md) remains `Accepted` and requires no modification.
