@@ -19,23 +19,32 @@ The exit criteria for M2/M3/M4 below should now be read as the cumulative exit c
 | Viz | SVG-first visualization system (ADR-008); no new content | Merged |
 | 2C | Load Balancing; Scalability and Reliability (Auto-Scaling, High Availability) | Merged |
 | 2D | Monitoring and Observability (Observability Fundamentals, Metrics and Alerting, Logging, Distributed Tracing) | Merged |
-| Final QA | Cloud Fundamentals QA & hardening audit (no new concepts); see `docs/CLOUD_FUNDAMENTALS_QA_REPORT.md` | In review |
+| Final QA | Cloud Fundamentals QA & hardening audit (no new concepts); see `docs/CLOUD_FUNDAMENTALS_QA_REPORT.md` | Merged (`8b8d84a`, PR #9) |
 | Later | Cloud Computing Models; Disaster Recovery | Not started |
 
 The visualization phase is cross-cutting, not a content slice: it makes declarative SVG the default scene renderer, adds reusable SVG primitives and a documented standard (`docs/SVG_VISUALIZATION_STANDARD.md`), and moves React Flow off the eager lesson path. It adds no concepts, lessons, routes, or status changes.
 
 Concept-level coverage is tracked in `docs/CLOUD_FUNDAMENTALS_CURRICULUM.md`.
 
+### Kubernetes Fundamentals Slice Progress (M5+ Domain)
+
+| Slice | Categories | Status |
+|---|---|---|
+| 3A | Foundations, Architecture, Workloads, Networking, Configuration (5 categories, 4 simulation labs) | Merged (`990cbad`, PR #10) |
+| 3B | Pod Lifecycle, Scheduling, Resource Management, Scaling, Deployment Strategies (5 categories, 5 simulation labs) | Merged (`eb97552`, PR #11) |
+| 3C | Networking Internals, Ingress & Traffic, Network Security, Identity & Access, Workload Security (5 categories, 5 simulation labs) | Merged (`e6dc7ee`, PR #12) |
+| 3D | Storage Fundamentals, Storage Internals, Stateful Workloads, Data Reliability, Storage Operations | In progress (`feat/kubernetes-storage-reliability-slice-3d`) |
+
 ## Milestone Overview
 
 | Milestone | Focus | Status |
 |---|---|---|
 | M0 | Product Foundation | Complete |
-| M1 | Application Shell & Core Engines | Planned |
-| M2 | First Learning Domain — Cloud Fundamentals | Planned |
-| M3 | Interactive Labs & Simulations | Planned |
-| M4 | Progress Tracking & Knowledge Checks | Planned |
-| M5+ | Additional Domains | Future |
+| M1 | Application Shell & Core Engines | Complete (delivered via M1A + Slice 1) |
+| M2 | First Learning Domain — Cloud Fundamentals | Delivered incrementally (Slices 1–2D; 30/34 concepts active) |
+| M3 | Interactive Labs & Simulations | Delivered incrementally (Slices 1–2D) |
+| M4 | Progress Tracking & Knowledge Checks | Delivered incrementally (Slices 1–2D) |
+| M5+ | Additional Domains (Kubernetes Fundamentals) | In progress (Slices 3A–3C merged; Slice 3D in progress) |
 
 ---
 

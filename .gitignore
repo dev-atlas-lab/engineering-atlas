@@ -11,6 +11,10 @@ dist-ssr
 .env.local
 .env.*.local
 
+# Antigravity — active MCP config holds local secrets.
+# Commit `.agents/mcp_config.example.json` instead; copy to `mcp_config.json` locally.
+.agents/mcp_config.json
+
 # Logs
 *.log
 npm-debug.log*

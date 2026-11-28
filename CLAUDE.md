@@ -18,14 +18,13 @@ Tagline: **Understand systems. Explore architecture. Master engineering.**
 
 ## Tech Stack
 
-- React + TypeScript + Vite
-- Tailwind CSS + shadcn/ui
-- Motion (animation)
-- React Flow (node-based diagrams)
-- SVG / D3.js (custom visualizations)
+- React + TypeScript (strict) + Vite
+- Tailwind CSS + `lucide-react` + `clsx` / `tailwind-merge` / `class-variance-authority`
+- Declarative SVG (first-party visualization primitives)
+- React Flow (`@xyflow/react`, lazy-loaded for `interaction: 'graph'` scenes)
 - Zustand (state management)
-- IndexedDB / LocalStorage (persistence)
-- MDX or structured TypeScript content
+- IndexedDB (`idb-keyval`) / LocalStorage (persistence)
+- Structured TypeScript content modules (per-concept lazy loading)
 
 ## Coding Principles
 
@@ -89,13 +88,15 @@ Provider implementations are linked to concepts, not to the top-level hierarchy.
 docs/                    # Product and architecture documentation
   decisions/             # Architecture Decision Records
 src/
-  app/                   # Application shell, routing, layout
-  domains/               # Learning domain content and configuration
-  features/              # Feature modules (workspace, labs, progress)
-  engines/               # Core engines (visualization, simulation, lab)
+  app/                   # Application shell, routing, layout, theme
+  content/               # Learning domain content, metadata, and loaders
+  engines/               # Core engines (visualization, simulation, lab, assessment)
   components/            # Shared UI components
   hooks/                 # Shared React hooks
   lib/                   # Utilities and helpers
-  types/                 # Shared TypeScript types
+  pages/                 # Route-level page components
+  stores/                # Zustand state stores (local persistence)
+  styles/                # Global CSS and Tailwind tokens
+  test/                  # Vitest / jsdom test setup
 public/                  # Static assets
 ```
